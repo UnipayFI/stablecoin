@@ -98,6 +98,11 @@ pub fn process_stake_usdu_mint_susdu(
     ctx: Context<StakeUsduMintSusdu>,
     usdu_amount: u64,
 ) -> Result<()> {
+    require!(
+        ctx.accounts.vault_stake_pool_usdu_token_account.key() == ctx.accounts.vault_state.vault_stake_pool_usdu_token_account,
+         VaultError::InvalidVaultStakePoolUsduTokenAccount
+    );
+    require!(usdu_amount > 0, VaultError::InvalidStakeUsduAmount);
     let total_susdu_supply = ctx.accounts.susdu_config.total_supply;
     // 1. check max deposit
     let max_assets = ctx.accounts.vault_config.max_deposit();
@@ -107,9 +112,6 @@ pub fn process_stake_usdu_mint_susdu(
         usdu_amount,
         total_susdu_supply,
     );
-    msg!("usdu_amount: {}", usdu_amount);
-    msg!("total_susdu_supply: {}", ctx.accounts.susdu_config.total_supply);
-    msg!("susdu_amount: {}", susdu_amount);
     require!(susdu_amount > 0, VaultError::InvalidPreviewDepositSusduAmount);
     // 3. update total_usdu_supply
     let vault_config = &mut ctx.accounts.vault_config;

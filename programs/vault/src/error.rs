@@ -26,6 +26,10 @@ pub enum VaultError {
     InvalidVaultStakePoolUsduTokenAccount,
     #[msg("Invalid vault slio usdu token account")]
     InvalidVaultSlioUsduTokenAccount,
+    #[msg("Invalid vault usdu token account")]
+    InvalidVaultUsduTokenAccount,
+    #[msg("Invalid vault susdu token account")]
+    InvalidVaultSusduTokenAccount,
     #[msg("Invalid cooldown owner")]
     InvalidCooldownOwner,
     #[msg("Invalid cooldown underlying token account")]
@@ -56,6 +60,12 @@ pub enum VaultError {
     AmountMustBeGreaterThanZero,
     #[msg("Insufficient usdu")]
     InsufficientUsdu,
+    #[msg("Invalid unstake susdu amount")]
+    InvalidUnstakeSusduAmount,
+    #[msg("Invalid preview redeem usdu amount")]
+    InvalidPreviewRedeemUsduAmount,
+    #[msg("Invalid stake usdu amount")]
+    InvalidStakeUsduAmount,
 
     // emergency
     #[msg("Insufficient silo usdu")]

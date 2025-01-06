@@ -60,6 +60,10 @@ pub struct WithdrawUsdu<'info> {
 }
 
 pub fn process_withdraw_usdu(ctx: Context<WithdrawUsdu>) -> Result<()> {  
+    require!(
+        ctx.accounts.vault_state.vault_slio_usdu_token_account.key() == ctx.accounts.vault_slio_usdu_token_account.key(),
+        VaultError::InvalidVaultSlioUsduTokenAccount
+    );
     require!(ctx.accounts.cooldown.is_initialized, VaultError::CooldownNotInitialized);
     require!(!ctx.accounts.cooldown.is_cooldown_active(), VaultError::CooldownActive);
     require!(
@@ -73,8 +77,7 @@ pub fn process_withdraw_usdu(ctx: Context<WithdrawUsdu>) -> Result<()> {
     cooldown.cooldown_end = 0;
     cooldown.underlying_token_amount = 0;
     require!(usdu_amount > 0, VaultError::InsufficientUsduCanNotBeZero);
-    require!(vault_config.total_usdu_supply >= usdu_amount, VaultError::InsufficientUsduSupply);
-    vault_config.total_usdu_supply = vault_config.total_usdu_supply - usdu_amount;
+
     // transfer usdu from vault_slio_usdu_token_account to caller_usdu_token_account
     let config_bump = &[vault_config.bump];
     let config_seeds = &[

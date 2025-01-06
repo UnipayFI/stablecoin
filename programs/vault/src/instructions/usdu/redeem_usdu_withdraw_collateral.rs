@@ -110,6 +110,10 @@ pub fn process_redeem_usdu_withdraw_collateral(
     collateral_amount: u64,
     usdu_amount: u64,
 ) -> Result<()> {
+    require!(
+        ctx.accounts.vault_state.vault_usdu_token_account.key() == ctx.accounts.vault_usdu_token_account.key(),
+        VaultError::InvalidVaultUsduTokenAccount
+    );
     let vault_config = &ctx.accounts.vault_config;
     require!(vault_config.is_initialized, VaultError::ConfigNotInitialized);
     let vault_state = &ctx.accounts.vault_state;

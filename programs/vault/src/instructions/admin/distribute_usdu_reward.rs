@@ -11,7 +11,7 @@ use crate::error::VaultError;
 use crate::constants::{
     VAULT_STATE_SEED,
     VAULT_CONFIG_SEED,
-    VAULT_SLIO_USDU_TOKEN_ACCOUNT_SEED,
+    VAULT_STAKE_POOL_USDU_TOKEN_ACCOUNT_SEED,
 };
 
 use guardian::state::{AccessRegistry, AccessRole, Role};
@@ -41,13 +41,13 @@ pub struct DistributeUsduReward<'info> {
      pub caller_usdu_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
     #[account(
         mut,
-        seeds = [VAULT_SLIO_USDU_TOKEN_ACCOUNT_SEED],
-        bump = vault_state.vault_slio_usdu_token_account_bump,
+        seeds = [VAULT_STAKE_POOL_USDU_TOKEN_ACCOUNT_SEED],
+        bump = vault_state.vault_stake_pool_usdu_token_account_bump,
         token::mint = usdu_token,
         token::authority = vault_config,
         token::token_program = token_program,
     )]
-    pub vault_slio_usdu_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
+    pub vault_stake_pool_usdu_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
 
     #[account(
         seeds = [ACCESS_REGISTRY_SEED],
@@ -72,6 +72,11 @@ pub fn process_distribute_usdu_reward(
     ctx: Context<DistributeUsduReward>,
     usdu_amount: u64,
 ) -> Result<()> {
+    require!(usdu_amount > 0, VaultError::AmountMustBeGreaterThanZero);
+    require!(
+        ctx.accounts.vault_stake_pool_usdu_token_account.key() == ctx.accounts.vault_state.vault_stake_pool_usdu_token_account,
+        VaultError::InvalidVaultStakePoolUsduTokenAccount
+    );
     require!(ctx.accounts.caller_usdu_token_account.amount >= usdu_amount, VaultError::InsufficientUsduBalance);
     let vault_config = &mut ctx.accounts.vault_config;
     require!(vault_config.get_unvested_amount() <= 0, VaultError::StillVesting);
@@ -87,7 +92,7 @@ pub fn process_distribute_usdu_reward(
             ctx.accounts.token_program.to_account_info(),
             TransferChecked {
                 from: ctx.accounts.caller_usdu_token_account.to_account_info(),
-                to: ctx.accounts.vault_slio_usdu_token_account.to_account_info(),
+                to: ctx.accounts.vault_stake_pool_usdu_token_account.to_account_info(),
                 authority: ctx.accounts.caller.to_account_info(),
                 mint: ctx.accounts.usdu_token.to_account_info(),
             },

@@ -125,8 +125,21 @@ pub(crate) fn process_unstake_susdu(
     ctx: Context<UnstakeSusdu>,
     susdu_amount: u64
 ) -> Result<()> {
+    require!(
+        ctx.accounts.vault_state.vault_stake_pool_usdu_token_account.key() == ctx.accounts.vault_state.vault_stake_pool_usdu_token_account,
+        VaultError::InvalidVaultStakePoolUsduTokenAccount
+    );
+    require!(
+        ctx.accounts.vault_state.vault_slio_usdu_token_account.key() == ctx.accounts.vault_slio_usdu_token_account.key(),
+        VaultError::InvalidVaultSlioUsduTokenAccount
+    );
+    require!(
+        ctx.accounts.vault_state.vault_susdu_token_account.key() == ctx.accounts.vault_susdu_token_account.key(),
+        VaultError::InvalidVaultSusduTokenAccount
+    );
+    require!(susdu_amount > 0, VaultError::InvalidUnstakeSusduAmount);
     let total_susdu_amount = ctx.accounts.susdu_config.total_supply;
-    let vault_config = &ctx.accounts.vault_config;
+    let vault_config = &mut ctx.accounts.vault_config;
     // check caller has enough susdu
     require!(
         ctx.accounts.caller_susdu_token_account.amount >= susdu_amount,
@@ -136,6 +149,9 @@ pub(crate) fn process_unstake_susdu(
         susdu_amount,
         total_susdu_amount,
     );
+    require!(usdu_amount > 0, VaultError::InvalidPreviewRedeemUsduAmount);
+    require!(vault_config.total_usdu_supply >= usdu_amount, VaultError::InsufficientUsduSupply);
+    vault_config.total_usdu_supply = vault_config.total_usdu_supply - usdu_amount;
     // 1. check caller_susdu_token_account has enough susdu
     require!(
         ctx.accounts.caller_susdu_token_account.amount >= susdu_amount,
@@ -187,7 +203,7 @@ pub(crate) fn process_unstake_susdu(
         CpiContext::new_with_signer(
             ctx.accounts.susdu_program.to_account_info(),
             RedeemSusdu {
-                authority: ctx.accounts.vault_config.to_account_info(),
+                authority: vault_config.to_account_info(),
                 access_registry: ctx.accounts.access_registry.to_account_info(),
                 access_role: ctx.accounts.susdu_redeemer.to_account_info(),
                 susdu_config: ctx.accounts.susdu_config.to_account_info(),
@@ -208,7 +224,7 @@ pub(crate) fn process_unstake_susdu(
             TransferChecked {
                 from: ctx.accounts.vault_stake_pool_usdu_token_account.to_account_info(),
                 to: ctx.accounts.vault_slio_usdu_token_account.to_account_info(),
-                authority: ctx.accounts.vault_config.to_account_info(),
+                authority: vault_config.to_account_info(),
                 mint: ctx.accounts.usdu_token.to_account_info(),
             },
             config_seeds,
