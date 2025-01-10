@@ -4,6 +4,7 @@ pub mod error;
 pub mod events;
 pub mod instructions;
 pub mod state;
+pub mod utils;
 
 use anchor_lang::prelude::*;
 
@@ -11,8 +12,9 @@ pub use constants::*;
 pub use events::*;
 pub use instructions::*;
 pub use state::*;
+pub use utils::*;
 
-declare_id!("H78gQvGwKs8skwuCyTvV53oNeUVcrY3mWrBpjhB9MfoJ");
+declare_id!("5B6ex5JPZMv6t2tHzi4iz1tLb3y8JCqcPpefRqq68wGH");
 
 #[program]
 pub mod guardian {

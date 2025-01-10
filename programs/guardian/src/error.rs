@@ -35,4 +35,6 @@ pub enum GuardianError {
     AccessRoleNotInitialized,
     #[msg("Must be access registry")]
     MustBeAccessRegistry,
+    #[msg("Invalid program id")]
+    InvalidProgramId,
 }

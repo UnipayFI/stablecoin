@@ -7,6 +7,7 @@ use crate::constants::{VAULT_CONFIG_SEED, VAULT_STATE_SEED, VAULT_USDU_TOKEN_ACC
 use crate::error::VaultError;
 use crate::events::RedeemUsduWithdrawCollateralEvent;
 
+use guardian::utils::has_role;
 use guardian::state::{AccessRegistry, AccessRole, Role};
 use guardian::constants::{ACCESS_REGISTRY_SEED, ACCESS_ROLE_SEED};
 
@@ -111,6 +112,15 @@ pub fn process_redeem_usdu_withdraw_collateral(
     usdu_amount: u64,
 ) -> Result<()> {
     require!(
+        has_role(
+            &ctx.accounts.access_registry,
+            &ctx.accounts.vault_usdu_redeemer,
+            &ctx.accounts.authority.to_account_info(),
+            Role::VaultUsduRedeemer,
+        )?,
+        VaultError::UnauthorizedRole
+    );
+    require!(
         ctx.accounts.vault_state.vault_usdu_token_account.key() == ctx.accounts.vault_usdu_token_account.key(),
         VaultError::InvalidVaultUsduTokenAccount
     );
@@ -118,16 +128,6 @@ pub fn process_redeem_usdu_withdraw_collateral(
     require!(vault_config.is_initialized, VaultError::ConfigNotInitialized);
     let vault_state = &ctx.accounts.vault_state;
     require!(vault_state.is_initialized, VaultError::StateNotInitialized);
-
-    // check vault_usdu_redeemer role
-    require!(
-        ctx.accounts.vault_usdu_redeemer.is_initialized,
-        VaultError::AccessRoleNotInitialized
-    );
-    require!(
-        ctx.accounts.vault_usdu_redeemer.access_registry.eq(&ctx.accounts.access_registry.key()),
-        VaultError::AccessRegistryMismatch
-    );
 
     // delegate amount checked
     // fund should approve enough collateral amount to the vault

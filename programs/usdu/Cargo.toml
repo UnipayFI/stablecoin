@@ -21,5 +21,6 @@ custom-panic = []
 
 [dependencies]
 anchor-lang = { version = "0.30.1", features = ["derive", "init-if-needed", "event-cpi"] }
+anchor-spl = { version = "0.30.1", features = ["token_2022_extensions"] }
+spl-type-length-value = "0.4.3"
 guardian = { path = "../guardian", features = ["cpi"] }
-anchor-spl = { version = "0.30.1" }

@@ -3,6 +3,7 @@ use std::fmt::Display;
 
 #[derive(Clone, Copy, PartialEq, Eq, AnchorSerialize, AnchorDeserialize)]
 pub enum Role {
+
     // USDU roles
     UsduMinter,
     UsduRedeemer,
@@ -16,8 +17,7 @@ pub enum Role {
     VaultUsduRedeemer,
     VaultSusduMinter,
     VaultSusduRedeemer,
-
-    // DistributeRewarder
+    VaultManager,
     DistributeRewarder,
 }
 
@@ -42,6 +42,7 @@ impl Display for Role {
             Role::VaultUsduRedeemer => "vault_usdu_redeemer",
             Role::VaultSusduMinter => "vault_susdu_minter",
             Role::VaultSusduRedeemer => "vault_susdu_redeemer",
+            Role::VaultManager => "vault_manager",
             Role::DistributeRewarder => "distribute_rewarder",
         };
         write!(f, "{}", role_str)

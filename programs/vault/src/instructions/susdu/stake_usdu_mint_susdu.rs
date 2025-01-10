@@ -14,6 +14,7 @@ use crate::constants::{
 };
 use crate::error::VaultError;
 
+use guardian::utils::has_role;
 use guardian::state::{AccessRegistry, AccessRole, Role};
 use guardian::constants::{ACCESS_REGISTRY_SEED, ACCESS_ROLE_SEED};
 
@@ -99,6 +100,15 @@ pub fn process_stake_usdu_mint_susdu(
     usdu_amount: u64,
 ) -> Result<()> {
     require!(
+        has_role(
+            &ctx.accounts.access_registry,
+            &ctx.accounts.susdu_minter,
+            &ctx.accounts.vault_config.to_account_info(),
+            Role::SusduMinter,
+        )?,
+        VaultError::UnauthorizedRole
+    );
+    require!(
         ctx.accounts.vault_stake_pool_usdu_token_account.key() == ctx.accounts.vault_state.vault_stake_pool_usdu_token_account,
          VaultError::InvalidVaultStakePoolUsduTokenAccount
     );
@@ -107,12 +117,14 @@ pub fn process_stake_usdu_mint_susdu(
     // 1. check max deposit
     let max_assets = ctx.accounts.vault_config.max_deposit();
     require!(usdu_amount <= max_assets, VaultError::MaxDepositExceeded);
+
     // 2. calculate susdu amount(shares amount) to transfer to receiver_susdu_token_account
     let susdu_amount = ctx.accounts.vault_config.preview_deposit(
         usdu_amount,
         total_susdu_supply,
     );
     require!(susdu_amount > 0, VaultError::InvalidPreviewDepositSusduAmount);
+
     // 3. update total_usdu_supply
     let vault_config = &mut ctx.accounts.vault_config;
     vault_config.total_usdu_supply = vault_config.total_usdu_supply + usdu_amount;

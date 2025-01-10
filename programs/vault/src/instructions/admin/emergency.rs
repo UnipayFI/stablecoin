@@ -20,6 +20,10 @@ use crate::constants::{
     VAULT_USDU_TOKEN_ACCOUNT_SEED,
 };
 use crate::error::VaultError;
+use crate::utils::has_role_or_admin;
+
+use guardian::constants::{ACCESS_REGISTRY_SEED, ACCESS_ROLE_SEED};
+use guardian::state::{AccessRegistry, AccessRole, Role};
 
 #[derive(Accounts)]
 pub struct EmergencyWithdrawVaultStakePoolUsdu<'info> {
@@ -52,6 +56,18 @@ pub struct EmergencyWithdrawVaultStakePoolUsdu<'info> {
         associated_token::token_program = token_program,
     )]
     pub receiver_usdu_token_account: InterfaceAccount<'info, TokenAccount>,
+    #[account(
+        seeds = [ACCESS_REGISTRY_SEED],
+        seeds::program = guardian::id(),
+        bump = access_registry.bump,
+    )]
+    pub access_registry: Box<Account<'info, AccessRegistry>>,
+    #[account(
+        seeds = [ACCESS_ROLE_SEED, access_registry.key().as_ref(), authority.key().as_ref(), Role::VaultManager.to_seed().as_slice()],
+        bump = vault_manager.bump,
+        seeds::program = guardian::id(),
+    )]
+    pub vault_manager: Box<Account<'info, AccessRole>>,
     pub usdu_token: InterfaceAccount<'info, Mint>,
 
     pub token_program: Program<'info, Token2022>,
@@ -90,6 +106,18 @@ pub struct EmergencyWithdrawVaultSlioUsdu<'info> {
         associated_token::token_program = token_program,
     )]
     pub receiver_usdu_token_account: InterfaceAccount<'info, TokenAccount>,
+    #[account(
+        seeds = [ACCESS_REGISTRY_SEED],
+        seeds::program = guardian::id(),
+        bump = access_registry.bump,
+    )]
+    pub access_registry: Box<Account<'info, AccessRegistry>>,
+    #[account(
+        seeds = [ACCESS_ROLE_SEED, access_registry.key().as_ref(), authority.key().as_ref(), Role::VaultManager.to_seed().as_slice()],
+        bump = vault_manager.bump,
+        seeds::program = guardian::id(),
+    )]
+    pub vault_manager: Box<Account<'info, AccessRole>>,
     pub usdu_token: InterfaceAccount<'info, Mint>,
 
     pub token_program: Program<'info, Token2022>,
@@ -128,6 +156,18 @@ pub struct EmergencyWithdrawVaultUsdu<'info> {
         associated_token::token_program = token_program,
     )]
     pub receiver_usdu_token_account: InterfaceAccount<'info, TokenAccount>,
+    #[account(
+        seeds = [ACCESS_REGISTRY_SEED],
+        seeds::program = guardian::id(),
+        bump = access_registry.bump,
+    )]
+    pub access_registry: Box<Account<'info, AccessRegistry>>,
+    #[account(
+        seeds = [ACCESS_ROLE_SEED, access_registry.key().as_ref(), authority.key().as_ref(), Role::VaultManager.to_seed().as_slice()],
+        bump = vault_manager.bump,
+        seeds::program = guardian::id(),
+    )]
+    pub vault_manager: Box<Account<'info, AccessRole>>,
     pub usdu_token: InterfaceAccount<'info, Mint>,
 
     pub token_program: Program<'info, Token2022>,
@@ -166,6 +206,18 @@ pub struct EmergencyWithdrawVaultSusdu<'info> {
         associated_token::token_program = token_program,
     )]
     pub receiver_susdu_token_account: InterfaceAccount<'info, TokenAccount>,
+    #[account(
+        seeds = [ACCESS_REGISTRY_SEED],
+        seeds::program = guardian::id(),
+        bump = access_registry.bump,
+    )]
+    pub access_registry: Box<Account<'info, AccessRegistry>>,
+    #[account(
+        seeds = [ACCESS_ROLE_SEED, access_registry.key().as_ref(), authority.key().as_ref(), Role::VaultManager.to_seed().as_slice()],
+        bump = vault_manager.bump,
+        seeds::program = guardian::id(),
+    )]
+    pub vault_manager: Box<Account<'info, AccessRole>>,
     pub susdu_token: InterfaceAccount<'info, Mint>,
 
     pub token_program: Program<'info, Token2022>,
@@ -177,6 +229,16 @@ pub(crate) fn process_emergency_withdraw_vault_stake_pool_usdu(
     ctx: Context<EmergencyWithdrawVaultStakePoolUsdu>,
     amount: u64,
 ) -> Result<()> {
+    require!(
+        has_role_or_admin(
+            &ctx.accounts.vault_config, 
+            &ctx.accounts.access_registry, 
+            &ctx.accounts.vault_manager, 
+            &ctx.accounts.authority, 
+            Role::VaultManager
+        )?, 
+        VaultError::UnauthorizedRole
+    );
     require!(amount > 0, VaultError::AmountMustBeGreaterThanZero);
     require!(ctx.accounts.vault_stake_pool_usdu_token_account.amount >= amount, VaultError::InsufficientStakePoolUsdu);
     let vault_state = &ctx.accounts.vault_state;
@@ -208,6 +270,16 @@ pub(crate) fn process_emergency_withdraw_vault_slio_usdu(
     ctx: Context<EmergencyWithdrawVaultSlioUsdu>,
     amount: u64,
 ) -> Result<()> {
+    require!(
+        has_role_or_admin(
+            &ctx.accounts.vault_config, 
+            &ctx.accounts.access_registry, 
+            &ctx.accounts.vault_manager, 
+            &ctx.accounts.authority, 
+            Role::VaultManager
+        )?, 
+        VaultError::UnauthorizedRole
+    );
     require!(amount > 0, VaultError::AmountMustBeGreaterThanZero);
     require!(ctx.accounts.vault_slio_usdu_token_account.amount >= amount, VaultError::InsufficientSlioUsdu);
     let vault_state = &ctx.accounts.vault_state;
@@ -239,6 +311,16 @@ pub(crate) fn process_emergency_withdraw_vault_usdu(
     ctx: Context<EmergencyWithdrawVaultUsdu>,
     amount: u64,
 ) -> Result<()> {
+    require!(
+        has_role_or_admin(
+            &ctx.accounts.vault_config, 
+            &ctx.accounts.access_registry, 
+            &ctx.accounts.vault_manager, 
+            &ctx.accounts.authority, 
+            Role::VaultManager
+        )?, 
+        VaultError::UnauthorizedRole
+    );
     require!(amount > 0, VaultError::AmountMustBeGreaterThanZero);
     require!(ctx.accounts.vault_usdu_token_account.amount >= amount, VaultError::InsufficientVaultUsdu);
     let vault_state = &ctx.accounts.vault_state;
@@ -270,6 +352,16 @@ pub(crate) fn process_emergency_withdraw_vault_susdu(
     ctx: Context<EmergencyWithdrawVaultSusdu>,
     amount: u64,
 ) -> Result<()> {
+    require!(
+        has_role_or_admin(
+            &ctx.accounts.vault_config, 
+            &ctx.accounts.access_registry, 
+            &ctx.accounts.vault_manager, 
+            &ctx.accounts.authority, 
+            Role::VaultManager
+        )?, 
+        VaultError::UnauthorizedRole
+    );
     require!(amount > 0, VaultError::AmountMustBeGreaterThanZero);
     require!(ctx.accounts.vault_susdu_token_account.amount >= amount, VaultError::InsufficientVaultSusdu);
     let vault_state = &ctx.accounts.vault_state;

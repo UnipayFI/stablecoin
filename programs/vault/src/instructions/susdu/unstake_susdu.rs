@@ -24,6 +24,8 @@ use susdu::state::SusduConfig;
 use susdu::SUSDU_CONFIG_SEED;
 use susdu::cpi::{redeem_susdu, accounts::RedeemSusdu};
 
+use guardian::utils::has_role;
+
 #[derive(Accounts)]
 pub struct UnstakeSusdu<'info> {
     #[account(mut)]
@@ -126,6 +128,15 @@ pub(crate) fn process_unstake_susdu(
     susdu_amount: u64
 ) -> Result<()> {
     require!(
+        has_role(
+            &ctx.accounts.access_registry,
+            &ctx.accounts.susdu_redeemer,
+            &ctx.accounts.vault_config.to_account_info(),
+            Role::SusduRedeemer,
+        )?,
+        VaultError::UnauthorizedRole
+    );
+    require!(
         ctx.accounts.vault_state.vault_stake_pool_usdu_token_account.key() == ctx.accounts.vault_state.vault_stake_pool_usdu_token_account,
         VaultError::InvalidVaultStakePoolUsduTokenAccount
     );
@@ -140,6 +151,7 @@ pub(crate) fn process_unstake_susdu(
     require!(susdu_amount > 0, VaultError::InvalidUnstakeSusduAmount);
     let total_susdu_amount = ctx.accounts.susdu_config.total_supply;
     let vault_config = &mut ctx.accounts.vault_config;
+
     // check caller has enough susdu
     require!(
         ctx.accounts.caller_susdu_token_account.amount >= susdu_amount,
@@ -151,6 +163,7 @@ pub(crate) fn process_unstake_susdu(
     );
     require!(usdu_amount > 0, VaultError::InvalidPreviewRedeemUsduAmount);
     require!(vault_config.total_usdu_supply >= usdu_amount, VaultError::InsufficientUsduSupply);
+
     vault_config.total_usdu_supply = vault_config.total_usdu_supply - usdu_amount;
     // 1. check caller_susdu_token_account has enough susdu
     require!(

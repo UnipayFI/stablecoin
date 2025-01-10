@@ -13,6 +13,10 @@ use crate::constants::{
     VAULT_CONFIG_SEED,
     VAULT_STAKE_POOL_USDU_TOKEN_ACCOUNT_SEED,
 };
+use crate::utils::has_role_or_admin;
+
+use susdu::state::SusduConfig; 
+use susdu::constants::SUSDU_CONFIG_SEED;
 
 use guardian::state::{AccessRegistry, AccessRole, Role};
 use guardian::constants::{ACCESS_REGISTRY_SEED, ACCESS_ROLE_SEED};
@@ -61,7 +65,15 @@ pub struct DistributeUsduReward<'info> {
         seeds::program = guardian::id(),
     )]
     pub distribute_rewarder: Box<Account<'info, AccessRole>>,
+    #[account(
+        mut,
+        seeds = [SUSDU_CONFIG_SEED],
+        bump = susdu_config.bump,
+        seeds::program = susdu::id(),
+    )]
+    pub susdu_config: Box<Account<'info, SusduConfig>>,
 
+    pub susdu_token: Box<InterfaceAccount<'info, Mint>>,
     pub usdu_token: Box<InterfaceAccount<'info, Mint>>,
     pub token_program: Program<'info, Token2022>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -72,6 +84,16 @@ pub fn process_distribute_usdu_reward(
     ctx: Context<DistributeUsduReward>,
     usdu_amount: u64,
 ) -> Result<()> {
+    require!(
+        has_role_or_admin(
+            &ctx.accounts.vault_config, 
+            &ctx.accounts.access_registry, 
+            &ctx.accounts.distribute_rewarder, 
+            &ctx.accounts.caller, 
+            Role::DistributeRewarder
+        )?, 
+        VaultError::UnauthorizedRole
+    );
     require!(usdu_amount > 0, VaultError::AmountMustBeGreaterThanZero);
     require!(
         ctx.accounts.vault_stake_pool_usdu_token_account.key() == ctx.accounts.vault_state.vault_stake_pool_usdu_token_account,
@@ -80,6 +102,10 @@ pub fn process_distribute_usdu_reward(
     require!(ctx.accounts.caller_usdu_token_account.amount >= usdu_amount, VaultError::InsufficientUsduBalance);
     let vault_config = &mut ctx.accounts.vault_config;
     require!(vault_config.get_unvested_amount() <= 0, VaultError::StillVesting);
+    require!(
+        ctx.accounts.susdu_config.total_supply >= 10u64.pow(ctx.accounts.susdu_token.decimals.into()),
+        VaultError::SusduTotalSupplyTooLow
+    );
 
     // update vault config
     vault_config.vesting_amount = usdu_amount + vault_config.get_unvested_amount();

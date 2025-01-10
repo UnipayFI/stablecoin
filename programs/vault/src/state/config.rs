@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::error::{VaultError};
+use crate::error::VaultError;
 use crate::math::Rounding;
 
 #[constant]
@@ -53,9 +53,14 @@ impl VaultConfig {
     pub const SIZE: usize = 8 + std::mem::size_of::<Self>();
 
     pub fn total_assets(&self) -> u64 {
-        self.total_usdu_supply
-            .checked_sub(self.get_unvested_amount())
-            .expect("Math overflow")
+        let unvested_amount = self.get_unvested_amount();
+        let result = self.total_usdu_supply
+            .checked_sub(unvested_amount)
+            .expect("Math overflow");
+        msg!("total asset about usdu: {}", self.total_usdu_supply);
+        msg!("unvested amount: {}", unvested_amount);
+        msg!("result: {}", result);
+        result
     }
 
     pub fn check_min_shares(&self, total_shares: u64) -> Result<()> {
@@ -70,18 +75,23 @@ impl VaultConfig {
         let time_since_last_distribution = (Clock::get().unwrap().unix_timestamp as u128)
             .checked_sub(self.last_distribution_timestamp as u128)
             .expect("Math overflow");
-        if time_since_last_distribution > VESTING_PERIOD as u128 {
+        if time_since_last_distribution >= VESTING_PERIOD as u128 {
             return 0;
         } else {
             let vesting_amount = self.vesting_amount as u128;
             let vesting_period = VESTING_PERIOD as u128;
-            return (vesting_period
+            let result = (vesting_period
                 .checked_sub(time_since_last_distribution)
                 .expect("Math overflow")
                 .checked_mul(vesting_amount)
                 .expect("Math overflow")
                 .checked_div(vesting_period)
                 .expect("Math overflow")) as u64;
+            msg!("vesting_amount: {}", vesting_amount);
+            msg!("vesting_period: {}", vesting_period);
+            msg!("time_since_last_distribution: {}", time_since_last_distribution);
+            msg!("result: {}", result);
+            return result;
         }
     }
 
@@ -104,6 +114,9 @@ impl VaultConfig {
             .expect("Math overflow");
         let denominator = self.total_assets() as u128 + 1u128;
         let result = numerator / denominator;
+        msg!("numerator: {}", numerator);
+        msg!("denominator: {}", denominator);
+        msg!("result: {}", result);
         match rounding {
             Rounding::Floor => result as u64,
             Rounding::Ceil => {
@@ -136,11 +149,14 @@ impl VaultConfig {
             .checked_mul(self.total_assets() as u128 + 1u128)
             .expect("Math overflow");
         let denominator = total_shares as u128 + 1u128;
-        
+        let result = numerator / denominator;
+        msg!("numerator: {}", numerator);
+        msg!("denominator: {}", denominator);
+        msg!("result: {}", result);
         match rounding {
-            Rounding::Floor => (numerator / denominator) as u64,
+            Rounding::Floor => result as u64,
             Rounding::Ceil => {
-                let quotient = numerator / denominator;
+                let quotient = result;
                 let remainder = numerator % denominator;
                 if remainder > 0 {
                     (quotient + 1) as u64

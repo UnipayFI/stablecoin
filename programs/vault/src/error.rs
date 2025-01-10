@@ -66,6 +66,8 @@ pub enum VaultError {
     InvalidPreviewRedeemUsduAmount,
     #[msg("Invalid stake usdu amount")]
     InvalidStakeUsduAmount,
+    #[msg("Susdu total supply too low")]
+    SusduTotalSupplyTooLow,
 
     // emergency
     #[msg("Insufficient silo usdu")]
@@ -105,4 +107,7 @@ pub enum VaultError {
     InsufficientMinShares,
     #[msg("Still vesting")]
     StillVesting,
+
+    #[msg("Unauthorized role")]
+    UnauthorizedRole,
 }

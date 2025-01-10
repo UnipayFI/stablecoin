@@ -7,6 +7,7 @@ use crate::constants::{VAULT_CONFIG_SEED};
 use crate::error::VaultError;
 use crate::events::DepositCollateralMintUsduEvent;
 
+use guardian::utils::has_role;
 use guardian::state::{AccessRegistry, AccessRole, Role};
 use guardian::constants::{ACCESS_REGISTRY_SEED, ACCESS_ROLE_SEED};
 
@@ -102,18 +103,17 @@ pub fn process_deposit_collateral_mint_usdu(
     collateral_amount: u64,
     usdu_amount: u64,
 ) -> Result<()> {
+    require!(
+        has_role(
+            &ctx.accounts.access_registry,
+            &ctx.accounts.vault_usdu_minter,
+            &ctx.accounts.authority.to_account_info(),
+            Role::VaultUsduMinter,
+        )?,
+        VaultError::UnauthorizedRole
+    );
     let vault_config = &ctx.accounts.vault_config;
     require!(vault_config.is_initialized, VaultError::ConfigNotInitialized);
-
-    // check vault_usdu_minter role
-    require!(
-        ctx.accounts.vault_usdu_minter.is_initialized,
-        VaultError::AccessRoleNotInitialized
-    );
-    require!(
-        ctx.accounts.vault_usdu_minter.access_registry.eq(&ctx.accounts.access_registry.key()),
-        VaultError::AccessRegistryMismatch
-    );
 
     // delegate amount checked
     // beneficiary should approve enough amount to the vault
