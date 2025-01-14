@@ -19,5 +19,7 @@ pub enum UsduError {
     AccessRoleNotInitialized,
     #[msg("Access registry mismatch")]
     AccessRegistryMismatch,
+    #[msg("Unauthorized role")]
+    UnauthorizedRole,
 }
 

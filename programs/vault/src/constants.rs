@@ -10,6 +10,9 @@ pub const VAULT_STATE_SEED: &[u8] = b"vault-state";
 pub const VAULT_COOLDOWN_SEED: &[u8] = b"vault-cooldown";
 
 #[constant]
+pub const VAULT_BLACKLIST_SEED: &[u8] = b"vault-blacklist";
+
+#[constant]
 pub const VAULT_SUSDU_TOKEN_ACCOUNT_SEED: &[u8] = b"vault-susdu-token-approval";
 
 #[constant]

@@ -23,3 +23,10 @@ pub struct DepositCollateralMintUsduEvent {
     pub collateral_amount: u64,
     pub usdu_amount: u64,
 }
+
+#[event]
+pub struct BlacklistAdded {
+    pub user: Pubkey,
+    pub is_frozen_susdu: bool,
+    pub is_frozen_usdu: bool,
+}

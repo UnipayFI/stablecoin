@@ -16,7 +16,7 @@ pub use math::*;
 pub use state::*;
 pub use utils::*;
 
-declare_id!("GHQwoTgsKdsKMjn3ysdtWBNRbvzoiTGzBAuJn4idZB4");
+declare_id!("5iWz5vx46Wykbu9kjArcJftsECRKPqND1WqRqyXz7TNU");
 
 #[program]
 pub mod vault {
@@ -88,5 +88,13 @@ pub mod vault {
 
     pub fn emergency_withdraw_vault_stake_pool_usdu(ctx: Context<EmergencyWithdrawVaultStakePoolUsdu>, amount: u64) -> Result<()> {
         process_emergency_withdraw_vault_stake_pool_usdu(ctx, amount)
+    }
+
+    pub fn adjust_blacklist(ctx: Context<AdjustBlacklist>, user: Pubkey, is_frozen_susdu: bool, is_frozen_usdu: bool) -> Result<()> {
+        process_adjust_blacklist(ctx, user, is_frozen_susdu, is_frozen_usdu)
+    }
+
+    pub fn redistribute_locked(ctx: Context<RedistributeLocked>, receiver: Pubkey) -> Result<()> {
+        process_redistribute_locked(ctx, receiver)
     }
 }

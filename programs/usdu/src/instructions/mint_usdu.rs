@@ -2,11 +2,13 @@ use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{Token2022, Mint, TokenAccount};
 use anchor_spl::token_2022::{mint_to, MintTo};
 use anchor_spl::associated_token::AssociatedToken;
+
 use crate::constants::{USDU_CONFIG_SEED, USDU_SEED};
 use crate::error::UsduError;
 use crate::state::UsduConfig;
 use crate::events::UsduTokenMinted;
 
+use guardian::utils::has_role;
 use guardian::state::{AccessRegistry, AccessRole, Role};
 use guardian::constants::{ACCESS_REGISTRY_SEED, ACCESS_ROLE_SEED};
 
@@ -40,14 +42,14 @@ pub struct MintUsdu<'info> {
     #[account(mut)]
     pub usdu_token: Box<InterfaceAccount<'info, Mint>>,
     /// CHECK: no need to be checked
-    pub beneficiary: UncheckedAccount<'info>,
+    pub receiver: UncheckedAccount<'info>,
     #[account(
         mut,
         associated_token::mint = usdu_token,
-        associated_token::authority = beneficiary,
+        associated_token::authority = receiver,
         associated_token::token_program = token_program,
     )]
-    pub beneficiary_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
+    pub receiver_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
 
     pub token_program: Program<'info, Token2022>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -57,12 +59,13 @@ pub struct MintUsdu<'info> {
 pub fn process_mint_usdu(ctx: Context<MintUsdu>, usdu_amount: u64) -> Result<()> {
     require!(ctx.accounts.usdu_config.is_usdu_token_initialized, UsduError::ConfigNotSetupUSDU);
     require!(
-        ctx.accounts.access_role.is_initialized,
-        UsduError::AccessRoleNotInitialized
-    );
-    require!(
-        ctx.accounts.access_role.access_registry.eq(&ctx.accounts.access_registry.key()),
-        UsduError::AccessRegistryMismatch
+        has_role(
+            &ctx.accounts.access_registry,
+            &ctx.accounts.access_role,
+            &ctx.accounts.authority,
+            Role::UsduMinter,
+        )?,
+        UsduError::UnauthorizedRole
     );
     let usdu_config = &mut ctx.accounts.usdu_config;
     usdu_config.total_supply += usdu_amount;
@@ -72,7 +75,7 @@ pub fn process_mint_usdu(ctx: Context<MintUsdu>, usdu_amount: u64) -> Result<()>
             ctx.accounts.token_program.to_account_info(),
             MintTo {
                 mint: ctx.accounts.usdu_token.to_account_info(),
-                to: ctx.accounts.beneficiary_token_account.to_account_info(),
+                to: ctx.accounts.receiver_token_account.to_account_info(),
                 authority: ctx.accounts.usdu_token.to_account_info(),
             },
             signer_seeds,
@@ -82,8 +85,8 @@ pub fn process_mint_usdu(ctx: Context<MintUsdu>, usdu_amount: u64) -> Result<()>
     emit!(UsduTokenMinted {
         usdu_token: ctx.accounts.usdu_token.key(),
         amount: usdu_amount,
-        beneficiary: ctx.accounts.beneficiary.key(),
-        beneficiary_token_account: ctx.accounts.beneficiary_token_account.key(),
+        receiver: ctx.accounts.receiver.key(),
+        receiver_token_account: ctx.accounts.receiver_token_account.key(),
     });
     Ok(())
 }

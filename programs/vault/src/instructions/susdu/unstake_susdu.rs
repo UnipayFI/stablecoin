@@ -9,6 +9,7 @@ use anchor_spl::associated_token::AssociatedToken;
 use guardian::state::{AccessRegistry, AccessRole, Role};
 use guardian::constants::{ACCESS_REGISTRY_SEED, ACCESS_ROLE_SEED};
 
+use crate::utils::is_blacklisted;
 use crate::state::{VaultConfig, VaultState, Cooldown};
 use crate::constants::{
     VAULT_STATE_SEED,
@@ -117,6 +118,9 @@ pub struct UnstakeSusdu<'info> {
     )]
     pub vault_slio_usdu_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
 
+    /// CHECK: will be checked in the process function
+    pub blacklist_state: UncheckedAccount<'info>,
+
     pub susdu_program: Program<'info, Susdu>,
     pub token_program: Program<'info, Token2022>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -127,6 +131,7 @@ pub(crate) fn process_unstake_susdu(
     ctx: Context<UnstakeSusdu>,
     susdu_amount: u64
 ) -> Result<()> {
+    // 1. check caller has the role
     require!(
         has_role(
             &ctx.accounts.access_registry,
@@ -136,23 +141,31 @@ pub(crate) fn process_unstake_susdu(
         )?,
         VaultError::UnauthorizedRole
     );
+    // 2. check blacklist
+    require!(
+        !is_blacklisted(&ctx.accounts.blacklist_state.to_account_info())?,
+        VaultError::BlacklistAccount
+    );
+    // 3. check vault stake pool usdu token account
     require!(
         ctx.accounts.vault_state.vault_stake_pool_usdu_token_account.key() == ctx.accounts.vault_state.vault_stake_pool_usdu_token_account,
         VaultError::InvalidVaultStakePoolUsduTokenAccount
     );
+    // 4. check vault slio usdu token account
     require!(
         ctx.accounts.vault_state.vault_slio_usdu_token_account.key() == ctx.accounts.vault_slio_usdu_token_account.key(),
         VaultError::InvalidVaultSlioUsduTokenAccount
     );
+    // 5. check vault susdu token account
     require!(
         ctx.accounts.vault_state.vault_susdu_token_account.key() == ctx.accounts.vault_susdu_token_account.key(),
         VaultError::InvalidVaultSusduTokenAccount
     );
+    // 6. check susdu amount
     require!(susdu_amount > 0, VaultError::InvalidUnstakeSusduAmount);
     let total_susdu_amount = ctx.accounts.susdu_config.total_supply;
     let vault_config = &mut ctx.accounts.vault_config;
-
-    // check caller has enough susdu
+    // 7. check caller has enough susdu
     require!(
         ctx.accounts.caller_susdu_token_account.amount >= susdu_amount,
         VaultError::InsufficientSusdu
@@ -161,17 +174,19 @@ pub(crate) fn process_unstake_susdu(
         susdu_amount,
         total_susdu_amount,
     );
+    // 8. check preview redeem usdu amount
     require!(usdu_amount > 0, VaultError::InvalidPreviewRedeemUsduAmount);
+    // 9. check total usdu supply
     require!(vault_config.total_usdu_supply >= usdu_amount, VaultError::InsufficientUsduSupply);
 
     vault_config.total_usdu_supply = vault_config.total_usdu_supply - usdu_amount;
-    // 1. check caller_susdu_token_account has enough susdu
+    // 10. check caller_susdu_token_account has enough susdu
     require!(
         ctx.accounts.caller_susdu_token_account.amount >= susdu_amount,
         VaultError::InsufficientSusdu
     );
 
-    // 2. check cooldown is initialized
+    // 11. check cooldown is initialized
     if !ctx.accounts.cooldown.is_initialized {
         let cooldown = Cooldown {
             is_initialized: true,
@@ -188,8 +203,7 @@ pub(crate) fn process_unstake_susdu(
         cooldown.cooldown_end = Clock::get().unwrap().unix_timestamp as u64 + vault_config.cooldown_duration;
         cooldown.underlying_token_amount += usdu_amount;
     };
-
-    // 3. transfer susdu from caller to vault susdu token account
+    // 12. transfer susdu from caller to vault susdu token account
     transfer_checked(
         CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
@@ -204,7 +218,7 @@ pub(crate) fn process_unstake_susdu(
         ctx.accounts.susdu_token.decimals,
     )?;
 
-    // 4. redeem susdu from vault susdu token account
+    // 13. redeem susdu from vault susdu token account
     let config_bump = &[vault_config.bump];
     let config_seeds = &[
         &[
@@ -216,12 +230,12 @@ pub(crate) fn process_unstake_susdu(
         CpiContext::new_with_signer(
             ctx.accounts.susdu_program.to_account_info(),
             RedeemSusdu {
-                authority: vault_config.to_account_info(),
+                caller: vault_config.to_account_info(),
                 access_registry: ctx.accounts.access_registry.to_account_info(),
                 access_role: ctx.accounts.susdu_redeemer.to_account_info(),
                 susdu_config: ctx.accounts.susdu_config.to_account_info(),
                 susdu_token: ctx.accounts.susdu_token.to_account_info(),
-                authority_token_account: ctx.accounts.vault_susdu_token_account.to_account_info(),
+                caller_token_account: ctx.accounts.vault_susdu_token_account.to_account_info(),
                 token_program: ctx.accounts.token_program.to_account_info(),
                 system_program: ctx.accounts.system_program.to_account_info(),
             },
@@ -230,7 +244,7 @@ pub(crate) fn process_unstake_susdu(
         susdu_amount,
     )?;
 
-    // 5. transfer usdu from vault_stake_pool_usdu_token_account to vault_slio_usdu_token_account
+    // 14. transfer usdu from vault_stake_pool_usdu_token_account to vault_slio_usdu_token_account
     transfer_checked(
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
@@ -246,7 +260,7 @@ pub(crate) fn process_unstake_susdu(
         ctx.accounts.usdu_token.decimals,
     )?;
 
-    // 6. check min shares
+    // 15. check min shares
     vault_config.check_min_shares(ctx.accounts.susdu_config.total_supply)?;
     Ok(())
 }

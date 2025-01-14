@@ -4,12 +4,14 @@ use anchor_spl::{
     token_interface::{
         Mint, Token2022, spl_token_metadata_interface::state::TokenMetadata,
         token_metadata_initialize, TokenMetadataInitialize,
+        spl_pod::optional_keys::OptionalNonZeroPubkey,
     },
     token_2022::spl_token_2022::{
         extension::{
             BaseStateWithExtensions,
             Extension,
             StateWithExtensions,
+            permanent_delegate::PermanentDelegate
         },
         state::Mint as StateMint,
     },
@@ -21,13 +23,22 @@ use crate::state::SusduConfig;
 use crate::error::SusduError;
 use crate::events::SusduTokenCreated;
 
-fn get_mint_extensible_extension_data<T: Extension + VariableLenPack>(
-    mint_account: &mut AccountInfo,
+fn get_mint_with_len_extension<'a, T: Extension + VariableLenPack>(
+    mint_account: &'a mut AccountInfo,
 ) -> Result<T> {
     let mint_data = mint_account.data.borrow();
     let mint_with_extension = StateWithExtensions::<StateMint>::unpack(&mint_data)?;
     let extension_data = mint_with_extension.get_variable_len_extension::<T>()?;
     Ok(extension_data)
+}
+
+fn get_mint_with_permanent_delegate(
+    mint_account: &mut AccountInfo,
+) -> Result<PermanentDelegate> {
+    let mint_data = mint_account.data.borrow();
+    let mint_with_extension = StateWithExtensions::<StateMint>::unpack(&mint_data)?;
+    let extension_data = mint_with_extension.get_extension::<PermanentDelegate>()?;
+    Ok(*extension_data)
 }
 
 #[derive(Accounts)]
@@ -54,6 +65,7 @@ pub struct CreateSusdu<'info> {
         mint::token_program = token_program,
         extensions::metadata_pointer::authority = susdu_token,
         extensions::metadata_pointer::metadata_address = susdu_token,
+        extensions::permanent_delegate::delegate = susdu_token,
     )]
     pub susdu_token: InterfaceAccount<'info, Mint>,
 
@@ -100,11 +112,14 @@ pub fn process_create_susdu(ctx: Context<CreateSusdu>, decimals: u8) -> Result<(
 
     ctx.accounts.susdu_token.reload()?;
     let susdu_token_account = &mut ctx.accounts.susdu_token.to_account_info();
-    let metadata = get_mint_extensible_extension_data::<TokenMetadata>(susdu_token_account)?;
+    let metadata = get_mint_with_len_extension::<TokenMetadata>(susdu_token_account)?;
     assert_eq!(metadata.mint, ctx.accounts.susdu_token.key());
     assert_eq!(metadata.name, name);
     assert_eq!(metadata.symbol, symbol);
     assert_eq!(metadata.uri, uri);
+
+    let delegate = get_mint_with_permanent_delegate(susdu_token_account)?;
+    assert_eq!(delegate.delegate, OptionalNonZeroPubkey::try_from(Some(ctx.accounts.susdu_token.key()))?);
 
     // transfer rent to susdu_token
     let extra_lamports = Rent::get()?.minimum_balance(susdu_token_account.data_len()) - susdu_token_account.lamports();

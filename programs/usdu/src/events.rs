@@ -17,15 +17,15 @@ pub struct UsduTokenCreated {
 pub struct UsduTokenMinted {
     pub usdu_token: Pubkey,
     pub amount: u64,
-    pub beneficiary: Pubkey,
-    pub beneficiary_token_account: Pubkey,
+    pub receiver: Pubkey,
+    pub receiver_token_account: Pubkey,
 }
 
 #[event]
 pub struct UsduTokenRedeemed {
     pub usdu_token: Pubkey,
     pub amount: u64,
-    pub authority: Pubkey,
-    pub authority_token_account: Pubkey,
+    pub caller: Pubkey,
+    pub caller_token_account: Pubkey,
 }
 

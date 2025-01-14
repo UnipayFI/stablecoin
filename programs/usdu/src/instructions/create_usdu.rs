@@ -24,7 +24,7 @@ use crate::state::UsduConfig;
 use crate::error::UsduError;
 use crate::events::UsduTokenCreated;
 
-fn get_mint_extensible_extension_data<T: Extension + VariableLenPack>(
+fn get_mint_extensible_with_len_extension<T: Extension + VariableLenPack>(
     mint_account: &mut AccountInfo,
 ) -> Result<T> {
     let mint_data = mint_account.data.borrow();
@@ -102,7 +102,7 @@ pub fn process_create_usdu(ctx: Context<CreateUsdu>, decimals: u8) -> Result<()>
 
     ctx.accounts.usdu_token.reload()?;
     let usdu_token_account = &mut ctx.accounts.usdu_token.to_account_info();
-    let metadata = get_mint_extensible_extension_data::<TokenMetadata>(usdu_token_account)?;
+    let metadata = get_mint_extensible_with_len_extension::<TokenMetadata>(usdu_token_account)?;
     assert_eq!(metadata.mint, ctx.accounts.usdu_token.key());
     assert_eq!(metadata.name, name);
     assert_eq!(metadata.symbol, symbol);

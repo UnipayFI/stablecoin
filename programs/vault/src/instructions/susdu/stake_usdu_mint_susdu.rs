@@ -6,6 +6,7 @@ use anchor_spl::token_2022::{
 };
 use anchor_spl::associated_token::AssociatedToken;
 
+use crate::utils::is_blacklisted;
 use crate::state::{VaultState, VaultConfig};
 use crate::constants::{
     VAULT_STATE_SEED,
@@ -88,6 +89,8 @@ pub struct StakeUsduMintSusdu<'info> {
         seeds::program = susdu::id(),
     )]
     pub susdu_config: Box<Account<'info, SusduConfig>>,
+    /// CHECK: will be checked in the process function
+    pub blacklist_state: UncheckedAccount<'info>,
 
     pub susdu_program: Program<'info, Susdu>,
     pub token_program: Program<'info, Token2022>,
@@ -99,6 +102,7 @@ pub fn process_stake_usdu_mint_susdu(
     ctx: Context<StakeUsduMintSusdu>,
     usdu_amount: u64,
 ) -> Result<()> {
+    // 1. check access role
     require!(
         has_role(
             &ctx.accounts.access_registry,
@@ -108,27 +112,33 @@ pub fn process_stake_usdu_mint_susdu(
         )?,
         VaultError::UnauthorizedRole
     );
+    // 2. check blacklist
+    require!(
+        !is_blacklisted(&ctx.accounts.blacklist_state.to_account_info())?,
+        VaultError::BlacklistAccount
+    );
+    // 3. check vault_stake_pool_usdu_token_account
     require!(
         ctx.accounts.vault_stake_pool_usdu_token_account.key() == ctx.accounts.vault_state.vault_stake_pool_usdu_token_account,
          VaultError::InvalidVaultStakePoolUsduTokenAccount
     );
+    // 4. check usdu amount
     require!(usdu_amount > 0, VaultError::InvalidStakeUsduAmount);
     let total_susdu_supply = ctx.accounts.susdu_config.total_supply;
-    // 1. check max deposit
+    // 5. check max deposit
     let max_assets = ctx.accounts.vault_config.max_deposit();
     require!(usdu_amount <= max_assets, VaultError::MaxDepositExceeded);
-
-    // 2. calculate susdu amount(shares amount) to transfer to receiver_susdu_token_account
+    // 6. calculate susdu amount(shares amount) to transfer to receiver_susdu_token_account
     let susdu_amount = ctx.accounts.vault_config.preview_deposit(
         usdu_amount,
         total_susdu_supply,
     );
     require!(susdu_amount > 0, VaultError::InvalidPreviewDepositSusduAmount);
 
-    // 3. update total_usdu_supply
+    // 7. update total_usdu_supply
     let vault_config = &mut ctx.accounts.vault_config;
     vault_config.total_usdu_supply = vault_config.total_usdu_supply + usdu_amount;
-    // 4. transfer usdu from caller to vault_pool_usdu_token_account
+    // 8. transfer usdu from caller to vault_pool_usdu_token_account
     transfer_checked(
         CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
@@ -142,7 +152,7 @@ pub fn process_stake_usdu_mint_susdu(
         usdu_amount,
         ctx.accounts.usdu_token.decimals,
     )?;
-    // 4. mint susdu to receiver_susdu_token_account
+    // 9. mint susdu to receiver_susdu_token_account
     let config_bump = &[vault_config.bump];
     let config_seeds = &[
         &[
@@ -159,8 +169,8 @@ pub fn process_stake_usdu_mint_susdu(
                 access_role: ctx.accounts.susdu_minter.to_account_info(),
                 susdu_config: ctx.accounts.susdu_config.to_account_info(),
                 susdu_token: ctx.accounts.susdu_token.to_account_info(),
-                beneficiary: ctx.accounts.receiver.to_account_info(),
-                beneficiary_token_account: ctx.accounts.receiver_susdu_token_account.to_account_info(),
+                receiver: ctx.accounts.receiver.to_account_info(),
+                receiver_token_account: ctx.accounts.receiver_susdu_token_account.to_account_info(),
                 token_program: ctx.accounts.token_program.to_account_info(),
                 system_program: ctx.accounts.system_program.to_account_info(),
                 associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
@@ -170,7 +180,7 @@ pub fn process_stake_usdu_mint_susdu(
         susdu_amount,
     )?;
 
-    // 5. check min shares
+    // 10. check min shares
     vault_config.check_min_shares(ctx.accounts.susdu_config.total_supply)?;
     Ok(())
 }

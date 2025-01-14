@@ -19,5 +19,11 @@ pub enum SusduError {
     AccessRoleNotInitialized,
     #[msg("Access registry mismatch")]
     AccessRegistryMismatch,
+    #[msg("Unauthorized role")]
+    UnauthorizedRole,
+    #[msg("Invalid receiver associated token address")]
+    InvalidReceiverAssociatedTokenAddress,
 }
+
+
 

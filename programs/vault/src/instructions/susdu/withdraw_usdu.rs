@@ -6,6 +6,7 @@ use anchor_spl::token_2022::{
 };
 use anchor_spl::associated_token::AssociatedToken;
 
+use crate::utils::is_blacklisted;
 use crate::state::{VaultConfig, Cooldown, VaultState};
 use crate::error::VaultError;
 use crate::constants::{
@@ -52,7 +53,8 @@ pub struct WithdrawUsdu<'info> {
         bump = cooldown.bump,
     )]
     pub cooldown: Box<Account<'info, Cooldown>>,
-
+    /// CHECK: will be checked in the process function
+    pub blacklist_state: UncheckedAccount<'info>,
     pub usdu_token: Box<InterfaceAccount<'info, Mint>>,
     pub token_program: Program<'info, Token2022>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -60,25 +62,32 @@ pub struct WithdrawUsdu<'info> {
 }
 
 pub fn process_withdraw_usdu(ctx: Context<WithdrawUsdu>) -> Result<()> {  
+    // 1. check blacklist
+    require!(
+        !is_blacklisted(&ctx.accounts.blacklist_state.to_account_info())?,
+        VaultError::BlacklistAccount
+    );
+    // 2. check vault slio usdu token account
     require!(
         ctx.accounts.vault_state.vault_slio_usdu_token_account.key() == ctx.accounts.vault_slio_usdu_token_account.key(),
         VaultError::InvalidVaultSlioUsduTokenAccount
     );
+    // 3. check cooldown
     require!(ctx.accounts.cooldown.is_initialized, VaultError::CooldownNotInitialized);
     require!(!ctx.accounts.cooldown.is_cooldown_active(), VaultError::CooldownActive);
+    // 4. check receiver usdu token account
     require!(
         ctx.accounts.receiver_usdu_token_account.key() == ctx.accounts.cooldown.underlying_token_account,
         VaultError::InvalidReceiverUsduTokenAccount
     );
-
     let vault_config = &mut ctx.accounts.vault_config;
     let usdu_amount = ctx.accounts.cooldown.underlying_token_amount;
     let cooldown = &mut ctx.accounts.cooldown;
     cooldown.cooldown_end = 0;
     cooldown.underlying_token_amount = 0;
+    // 5. check usdu amount
     require!(usdu_amount > 0, VaultError::InsufficientUsduCanNotBeZero);
-
-    // transfer usdu from vault_slio_usdu_token_account to caller_usdu_token_account
+    // 6. transfer usdu from vault_slio_usdu_token_account to caller_usdu_token_account
     let config_bump = &[vault_config.bump];
     let config_seeds = &[
         &[

@@ -53,11 +53,11 @@ pub struct RedeemUsduWithdrawCollateral<'info> {
     )]
     pub usdu_redeemer: Box<Account<'info, AccessRole>>,
     #[account(
-        seeds = [ACCESS_ROLE_SEED, access_registry.key().as_ref(), authority.key().as_ref(), Role::VaultUsduRedeemer.to_seed().as_slice()],
-        bump = vault_usdu_redeemer.bump,
+        seeds = [ACCESS_ROLE_SEED, access_registry.key().as_ref(), authority.key().as_ref(), Role::CollateralWithdrawer.to_seed().as_slice()],
+        bump = collateral_withdrawer.bump,
         seeds::program = guardian::id(),
     )]
-    pub vault_usdu_redeemer: Box<Account<'info, AccessRole>>,
+    pub collateral_withdrawer: Box<Account<'info, AccessRole>>,
 
     /// CHECK: no need to checked
     pub benefactor: UncheckedAccount<'info>,
@@ -114,9 +114,9 @@ pub fn process_redeem_usdu_withdraw_collateral(
     require!(
         has_role(
             &ctx.accounts.access_registry,
-            &ctx.accounts.vault_usdu_redeemer,
+            &ctx.accounts.collateral_withdrawer,
             &ctx.accounts.authority.to_account_info(),
-            Role::VaultUsduRedeemer,
+            Role::CollateralWithdrawer,
         )?,
         VaultError::UnauthorizedRole
     );
@@ -150,7 +150,7 @@ pub fn process_redeem_usdu_withdraw_collateral(
 
     // 1. transfer collateral from fund to benefactor
     let config_bump = &[vault_config.bump];
-    let config_seeds = &[
+    let signer_seeds = &[
         &[
             VAULT_CONFIG_SEED,
             config_bump,
@@ -165,7 +165,7 @@ pub fn process_redeem_usdu_withdraw_collateral(
                 authority: ctx.accounts.vault_config.to_account_info().clone(),
                 mint: ctx.accounts.collateral_token.to_account_info().clone(),
             },
-            config_seeds,
+            signer_seeds,
         ),
         collateral_amount,
         ctx.accounts.collateral_token.decimals,
@@ -181,7 +181,7 @@ pub fn process_redeem_usdu_withdraw_collateral(
                 authority: ctx.accounts.vault_config.to_account_info().clone(),
                 mint: ctx.accounts.usdu_token.to_account_info().clone(),
             },
-            config_seeds,
+            signer_seeds,
         ),
         usdu_amount,
         ctx.accounts.usdu_token.decimals,
@@ -192,16 +192,16 @@ pub fn process_redeem_usdu_withdraw_collateral(
         CpiContext::new_with_signer(
             ctx.accounts.usdu_program.to_account_info(),
             RedeemUsdu {
-                authority: ctx.accounts.vault_config.to_account_info(),
+                caller: ctx.accounts.vault_config.to_account_info(),
                 access_registry: ctx.accounts.access_registry.to_account_info(),
                 access_role: ctx.accounts.usdu_redeemer.to_account_info(),
                 usdu_config: ctx.accounts.usdu_config.to_account_info(),
                 usdu_token: ctx.accounts.usdu_token.to_account_info(),
-                authority_token_account: ctx.accounts.vault_usdu_token_account.to_account_info(),
+                caller_token_account: ctx.accounts.vault_usdu_token_account.to_account_info(),
                 token_program: ctx.accounts.token_program.to_account_info(),
                 system_program: ctx.accounts.system_program.to_account_info(),
             },
-            config_seeds,
+            signer_seeds,
         ),
         usdu_amount,
     )?;

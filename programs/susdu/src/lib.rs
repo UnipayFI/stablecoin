@@ -12,7 +12,7 @@ pub use events::*;
 pub use instructions::*;
 pub use state::*;
 
-declare_id!("2J7qaFqKNUA2AexBxuRzpbwUXzJEdXUPTjRn487x1YFS");
+declare_id!("7VNEyaWFvTha7LGf8ncgFPXeZ6xArVA6VbQTdeKJGZWH");
 
 #[program]
 pub mod susdu {
@@ -32,5 +32,9 @@ pub mod susdu {
 
     pub fn redeem_susdu(ctx: Context<RedeemSusdu>, susdu_amount: u64) -> Result<()> {
         process_redeem_susdu(ctx, susdu_amount)
+    }
+
+    pub fn redistribute_susdu(ctx: Context<RedistributeSusdu>, receiver: Pubkey, amount: u64) -> Result<()> {
+        process_redistribute_susdu(ctx, receiver, amount)
     }
 }

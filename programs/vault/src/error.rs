@@ -110,4 +110,18 @@ pub enum VaultError {
 
     #[msg("Unauthorized role")]
     UnauthorizedRole,
+    #[msg("Blacklist state not approved")]
+    BlacklistStateNotApproved,
+    #[msg("Blacklist state already initialized")]
+    BlacklistStateAlreadyInitialized,
+    #[msg("Invalid blacklist state")]
+    InvalidBlacklistState,
+    #[msg("Blacklist account")]
+    BlacklistAccount,
+    #[msg("Not blacklist account")]
+    NotBlacklistAccount,
+    #[msg("Invalid locked susdu token account owner")]
+    InvalidLockedSusduTokenAccountOwner,
+    #[msg("Invalid locked susdu token account amount")]
+    InvalidLockedSusduTokenAccountAmount,
 }

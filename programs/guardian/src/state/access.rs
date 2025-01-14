@@ -11,13 +11,14 @@ pub enum Role {
     // SUSDU roles
     SusduMinter,
     SusduRedeemer,
+    SusduRedistributor,
 
     // Vault roles
-    VaultUsduMinter,
-    VaultUsduRedeemer,
-    VaultSusduMinter,
-    VaultSusduRedeemer,
-    VaultManager,
+    CollateralDepositor,
+    CollateralWithdrawer,
+    UsduStaker,
+    UsduUnstaker,
+    GrandMaster,
     DistributeRewarder,
 }
 
@@ -37,12 +38,13 @@ impl Display for Role {
 
             Role::SusduMinter => "susdu_minter",
             Role::SusduRedeemer => "susdu_redeemer",
+            Role::SusduRedistributor => "susdu_redistributor",
 
-            Role::VaultUsduMinter => "vault_usdu_minter",
-            Role::VaultUsduRedeemer => "vault_usdu_redeemer",
-            Role::VaultSusduMinter => "vault_susdu_minter",
-            Role::VaultSusduRedeemer => "vault_susdu_redeemer",
-            Role::VaultManager => "vault_manager",
+            Role::CollateralDepositor => "collateral_depositor",
+            Role::CollateralWithdrawer => "collateral_withdrawer",
+            Role::UsduStaker => "usdu_staker",
+            Role::UsduUnstaker => "usdu_unstaker",
+            Role::GrandMaster => "grand_master",
             Role::DistributeRewarder => "distribute_rewarder",
         };
         write!(f, "{}", role_str)

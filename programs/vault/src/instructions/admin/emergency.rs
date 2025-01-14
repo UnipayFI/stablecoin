@@ -63,11 +63,11 @@ pub struct EmergencyWithdrawVaultStakePoolUsdu<'info> {
     )]
     pub access_registry: Box<Account<'info, AccessRegistry>>,
     #[account(
-        seeds = [ACCESS_ROLE_SEED, access_registry.key().as_ref(), authority.key().as_ref(), Role::VaultManager.to_seed().as_slice()],
-        bump = vault_manager.bump,
+        seeds = [ACCESS_ROLE_SEED, access_registry.key().as_ref(), authority.key().as_ref(), Role::GrandMaster.to_seed().as_slice()],
+        bump = grand_master.bump,
         seeds::program = guardian::id(),
     )]
-    pub vault_manager: Box<Account<'info, AccessRole>>,
+    pub grand_master: Box<Account<'info, AccessRole>>,
     pub usdu_token: InterfaceAccount<'info, Mint>,
 
     pub token_program: Program<'info, Token2022>,
@@ -113,11 +113,11 @@ pub struct EmergencyWithdrawVaultSlioUsdu<'info> {
     )]
     pub access_registry: Box<Account<'info, AccessRegistry>>,
     #[account(
-        seeds = [ACCESS_ROLE_SEED, access_registry.key().as_ref(), authority.key().as_ref(), Role::VaultManager.to_seed().as_slice()],
-        bump = vault_manager.bump,
+        seeds = [ACCESS_ROLE_SEED, access_registry.key().as_ref(), authority.key().as_ref(), Role::GrandMaster.to_seed().as_slice()],
+        bump = grand_master.bump,
         seeds::program = guardian::id(),
     )]
-    pub vault_manager: Box<Account<'info, AccessRole>>,
+    pub grand_master: Box<Account<'info, AccessRole>>,
     pub usdu_token: InterfaceAccount<'info, Mint>,
 
     pub token_program: Program<'info, Token2022>,
@@ -163,11 +163,11 @@ pub struct EmergencyWithdrawVaultUsdu<'info> {
     )]
     pub access_registry: Box<Account<'info, AccessRegistry>>,
     #[account(
-        seeds = [ACCESS_ROLE_SEED, access_registry.key().as_ref(), authority.key().as_ref(), Role::VaultManager.to_seed().as_slice()],
-        bump = vault_manager.bump,
+        seeds = [ACCESS_ROLE_SEED, access_registry.key().as_ref(), authority.key().as_ref(), Role::GrandMaster.to_seed().as_slice()],
+        bump = grand_master.bump,
         seeds::program = guardian::id(),
     )]
-    pub vault_manager: Box<Account<'info, AccessRole>>,
+    pub grand_master: Box<Account<'info, AccessRole>>,
     pub usdu_token: InterfaceAccount<'info, Mint>,
 
     pub token_program: Program<'info, Token2022>,
@@ -213,11 +213,11 @@ pub struct EmergencyWithdrawVaultSusdu<'info> {
     )]
     pub access_registry: Box<Account<'info, AccessRegistry>>,
     #[account(
-        seeds = [ACCESS_ROLE_SEED, access_registry.key().as_ref(), authority.key().as_ref(), Role::VaultManager.to_seed().as_slice()],
-        bump = vault_manager.bump,
+        seeds = [ACCESS_ROLE_SEED, access_registry.key().as_ref(), authority.key().as_ref(), Role::GrandMaster.to_seed().as_slice()],
+        bump = grand_master.bump,
         seeds::program = guardian::id(),
     )]
-    pub vault_manager: Box<Account<'info, AccessRole>>,
+    pub grand_master: Box<Account<'info, AccessRole>>,
     pub susdu_token: InterfaceAccount<'info, Mint>,
 
     pub token_program: Program<'info, Token2022>,
@@ -233,9 +233,9 @@ pub(crate) fn process_emergency_withdraw_vault_stake_pool_usdu(
         has_role_or_admin(
             &ctx.accounts.vault_config, 
             &ctx.accounts.access_registry, 
-            &ctx.accounts.vault_manager, 
+            &ctx.accounts.grand_master, 
             &ctx.accounts.authority, 
-            Role::VaultManager
+            Role::GrandMaster
         )?, 
         VaultError::UnauthorizedRole
     );
@@ -274,9 +274,9 @@ pub(crate) fn process_emergency_withdraw_vault_slio_usdu(
         has_role_or_admin(
             &ctx.accounts.vault_config, 
             &ctx.accounts.access_registry, 
-            &ctx.accounts.vault_manager, 
+            &ctx.accounts.grand_master, 
             &ctx.accounts.authority, 
-            Role::VaultManager
+            Role::GrandMaster
         )?, 
         VaultError::UnauthorizedRole
     );
@@ -315,9 +315,9 @@ pub(crate) fn process_emergency_withdraw_vault_usdu(
         has_role_or_admin(
             &ctx.accounts.vault_config, 
             &ctx.accounts.access_registry, 
-            &ctx.accounts.vault_manager, 
+            &ctx.accounts.grand_master, 
             &ctx.accounts.authority, 
-            Role::VaultManager
+            Role::GrandMaster
         )?, 
         VaultError::UnauthorizedRole
     );
@@ -356,9 +356,9 @@ pub(crate) fn process_emergency_withdraw_vault_susdu(
         has_role_or_admin(
             &ctx.accounts.vault_config, 
             &ctx.accounts.access_registry, 
-            &ctx.accounts.vault_manager, 
+            &ctx.accounts.grand_master, 
             &ctx.accounts.authority, 
-            Role::VaultManager
+            Role::GrandMaster
         )?, 
         VaultError::UnauthorizedRole
     );
