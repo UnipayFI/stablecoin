@@ -106,7 +106,7 @@ pub fn process_stake_usdu_mint_susdu(
     require!(
         has_role(
             &ctx.accounts.access_registry,
-            &ctx.accounts.susdu_minter,
+            &ctx.accounts.susdu_minter.to_account_info(),
             &ctx.accounts.vault_config.to_account_info(),
             Role::SusduMinter,
         )?,

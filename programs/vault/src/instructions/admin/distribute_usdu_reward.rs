@@ -88,8 +88,8 @@ pub fn process_distribute_usdu_reward(
         has_role_or_admin(
             &ctx.accounts.vault_config, 
             &ctx.accounts.access_registry, 
-            &ctx.accounts.distribute_rewarder, 
-            &ctx.accounts.caller, 
+            &ctx.accounts.distribute_rewarder.to_account_info(), 
+            &ctx.accounts.caller.to_account_info(), 
             Role::DistributeRewarder
         )?, 
         VaultError::UnauthorizedRole

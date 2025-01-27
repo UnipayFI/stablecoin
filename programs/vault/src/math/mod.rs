@@ -6,8 +6,10 @@ pub mod error;
 pub mod rate;
 pub mod uint;
 pub mod rounding;
+pub mod checked;
 
 pub use rounding::Rounding;
+pub use checked::*;
 
 pub fn calculate_underlying_to_withdraw(
     amount: u64,

@@ -114,7 +114,7 @@ pub fn process_redeem_usdu_withdraw_collateral(
     require!(
         has_role(
             &ctx.accounts.access_registry,
-            &ctx.accounts.collateral_withdrawer,
+            &ctx.accounts.collateral_withdrawer.to_account_info(),
             &ctx.accounts.authority.to_account_info(),
             Role::CollateralWithdrawer,
         )?,

@@ -56,8 +56,8 @@ pub fn process_redistribute_susdu(ctx: Context<RedistributeSusdu>, receiver: Pub
     require!(
         has_role(
             &ctx.accounts.access_registry,
-            &ctx.accounts.access_role,
-            &ctx.accounts.authority,
+            &ctx.accounts.access_role.to_account_info(),
+            &ctx.accounts.authority.to_account_info(),
             Role::SusduRedistributor,
         )?,
         SusduError::UnauthorizedRole

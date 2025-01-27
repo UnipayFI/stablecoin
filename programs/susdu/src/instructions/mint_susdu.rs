@@ -62,8 +62,8 @@ pub fn process_mint_susdu(ctx: Context<MintSusdu>, susdu_amount: u64) -> Result<
     require!(
         has_role(
             &ctx.accounts.access_registry,
-            &ctx.accounts.access_role,
-            &ctx.accounts.authority,
+            &ctx.accounts.access_role.to_account_info(),
+            &ctx.accounts.authority.to_account_info(),
             Role::SusduMinter,
         )?,
         SusduError::UnauthorizedRole

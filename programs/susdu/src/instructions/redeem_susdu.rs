@@ -55,8 +55,8 @@ pub fn process_redeem_susdu(ctx: Context<RedeemSusdu>, susdu_amount: u64) -> Res
     require!(
         has_role(
             &ctx.accounts.access_registry,
-            &ctx.accounts.access_role,
-            &ctx.accounts.caller,
+            &ctx.accounts.access_role.to_account_info(),
+            &ctx.accounts.caller.to_account_info(),
             Role::SusduRedeemer,
         )?,
         SusduError::UnauthorizedRole

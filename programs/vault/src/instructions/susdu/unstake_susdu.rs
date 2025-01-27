@@ -135,7 +135,7 @@ pub(crate) fn process_unstake_susdu(
     require!(
         has_role(
             &ctx.accounts.access_registry,
-            &ctx.accounts.susdu_redeemer,
+            &ctx.accounts.susdu_redeemer.to_account_info(),
             &ctx.accounts.vault_config.to_account_info(),
             Role::SusduRedeemer,
         )?,

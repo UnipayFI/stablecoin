@@ -37,4 +37,8 @@ pub enum GuardianError {
     MustBeAccessRegistry,
     #[msg("Invalid program id")]
     InvalidProgramId,
+    #[msg("Invalid right to assign role")]
+    InvalidRightToAssignRole,
+    #[msg("Invalid right to revoke role")]
+    InvalidRightToRevokeRole,
 }

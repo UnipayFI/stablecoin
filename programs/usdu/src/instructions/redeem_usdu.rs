@@ -55,8 +55,8 @@ pub fn process_redeem_usdu(ctx: Context<RedeemUsdu>, usdu_amount: u64) -> Result
     require!(
         has_role(
             &ctx.accounts.access_registry,
-            &ctx.accounts.access_role,
-            &ctx.accounts.caller,
+            &ctx.accounts.access_role.to_account_info(),
+            &ctx.accounts.caller.to_account_info(),
             Role::UsduRedeemer,
         )?,
         UsduError::UnauthorizedRole

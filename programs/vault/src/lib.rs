@@ -16,7 +16,7 @@ pub use math::*;
 pub use state::*;
 pub use utils::*;
 
-declare_id!("5iWz5vx46Wykbu9kjArcJftsECRKPqND1WqRqyXz7TNU");
+declare_id!("GHQwoTgsKdsKMjn3ysdtWBNRbvzoiTGzBAuJn4idZB4");
 
 #[program]
 pub mod vault {

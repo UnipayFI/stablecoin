@@ -3,6 +3,7 @@ use std::fmt::Display;
 
 #[derive(Clone, Copy, PartialEq, Eq, AnchorSerialize, AnchorDeserialize)]
 pub enum Role {
+    GuardianAdmin,
 
     // USDU roles
     UsduMinter,
@@ -33,6 +34,8 @@ impl Role {
 impl Display for Role {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let role_str = match self {
+            Role::GuardianAdmin => "guardian_admin",
+
             Role::UsduMinter => "usdu_minter",
             Role::UsduRedeemer => "usdu_redeemer",
 

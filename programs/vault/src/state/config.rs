@@ -87,10 +87,6 @@ impl VaultConfig {
                 .expect("Math overflow")
                 .checked_div(vesting_period)
                 .expect("Math overflow")) as u64;
-            msg!("vesting_amount: {}", vesting_amount);
-            msg!("vesting_period: {}", vesting_period);
-            msg!("time_since_last_distribution: {}", time_since_last_distribution);
-            msg!("result: {}", result);
             return result;
         }
     }
@@ -114,9 +110,6 @@ impl VaultConfig {
             .expect("Math overflow");
         let denominator = self.total_assets() as u128 + 1u128;
         let result = numerator / denominator;
-        msg!("numerator: {}", numerator);
-        msg!("denominator: {}", denominator);
-        msg!("result: {}", result);
         match rounding {
             Rounding::Floor => result as u64,
             Rounding::Ceil => {
@@ -150,9 +143,6 @@ impl VaultConfig {
             .expect("Math overflow");
         let denominator = total_shares as u128 + 1u128;
         let result = numerator / denominator;
-        msg!("numerator: {}", numerator);
-        msg!("denominator: {}", denominator);
-        msg!("result: {}", result);
         match rounding {
             Rounding::Floor => result as u64,
             Rounding::Ceil => {

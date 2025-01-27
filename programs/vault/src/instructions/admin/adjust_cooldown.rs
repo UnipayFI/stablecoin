@@ -34,8 +34,8 @@ pub fn process_adjust_cooldown(ctx: Context<AdjustCooldown>, cooldown_duration: 
         has_role_or_admin(
             &ctx.accounts.vault_config, 
             &ctx.accounts.access_registry, 
-            &ctx.accounts.grand_master, 
-            &ctx.accounts.authority, 
+            &ctx.accounts.grand_master.to_account_info(), 
+            &ctx.accounts.authority.to_account_info(), 
             Role::GrandMaster
         )?, 
         VaultError::UnauthorizedRole

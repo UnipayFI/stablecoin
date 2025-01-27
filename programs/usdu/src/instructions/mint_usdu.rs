@@ -61,8 +61,8 @@ pub fn process_mint_usdu(ctx: Context<MintUsdu>, usdu_amount: u64) -> Result<()>
     require!(
         has_role(
             &ctx.accounts.access_registry,
-            &ctx.accounts.access_role,
-            &ctx.accounts.authority,
+            &ctx.accounts.access_role.to_account_info(),
+            &ctx.accounts.authority.to_account_info(),
             Role::UsduMinter,
         )?,
         UsduError::UnauthorizedRole

@@ -233,8 +233,8 @@ pub(crate) fn process_emergency_withdraw_vault_stake_pool_usdu(
         has_role_or_admin(
             &ctx.accounts.vault_config, 
             &ctx.accounts.access_registry, 
-            &ctx.accounts.grand_master, 
-            &ctx.accounts.authority, 
+            &ctx.accounts.grand_master.to_account_info(), 
+            &ctx.accounts.authority.to_account_info(), 
             Role::GrandMaster
         )?, 
         VaultError::UnauthorizedRole
@@ -274,8 +274,8 @@ pub(crate) fn process_emergency_withdraw_vault_slio_usdu(
         has_role_or_admin(
             &ctx.accounts.vault_config, 
             &ctx.accounts.access_registry, 
-            &ctx.accounts.grand_master, 
-            &ctx.accounts.authority, 
+            &ctx.accounts.grand_master.to_account_info(), 
+            &ctx.accounts.authority.to_account_info(), 
             Role::GrandMaster
         )?, 
         VaultError::UnauthorizedRole
@@ -315,8 +315,8 @@ pub(crate) fn process_emergency_withdraw_vault_usdu(
         has_role_or_admin(
             &ctx.accounts.vault_config, 
             &ctx.accounts.access_registry, 
-            &ctx.accounts.grand_master, 
-            &ctx.accounts.authority, 
+            &ctx.accounts.grand_master.to_account_info(), 
+            &ctx.accounts.authority.to_account_info(), 
             Role::GrandMaster
         )?, 
         VaultError::UnauthorizedRole
@@ -356,8 +356,8 @@ pub(crate) fn process_emergency_withdraw_vault_susdu(
         has_role_or_admin(
             &ctx.accounts.vault_config, 
             &ctx.accounts.access_registry, 
-            &ctx.accounts.grand_master, 
-            &ctx.accounts.authority, 
+            &ctx.accounts.grand_master.to_account_info(), 
+            &ctx.accounts.authority.to_account_info(), 
             Role::GrandMaster
         )?, 
         VaultError::UnauthorizedRole

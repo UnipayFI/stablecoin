@@ -106,7 +106,7 @@ pub fn process_deposit_collateral_mint_usdu(
     require!(
         has_role(
             &ctx.accounts.access_registry,
-            &ctx.accounts.collateral_depositor,
+            &ctx.accounts.collateral_depositor.to_account_info(),
             &ctx.accounts.authority.to_account_info(),
             Role::CollateralDepositor,
         )?,

@@ -124,4 +124,8 @@ pub enum VaultError {
     InvalidLockedSusduTokenAccountOwner,
     #[msg("Invalid locked susdu token account amount")]
     InvalidLockedSusduTokenAccountAmount,
+
+    // math
+    #[msg("Math overflow")]
+    MathOverflow,
 }
