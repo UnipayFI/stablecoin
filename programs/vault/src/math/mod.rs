@@ -1,10 +1,7 @@
 //! variety of math helper functions sourced spl lending program library
 
 pub mod common;
-pub mod decimal;
 pub mod error;
-pub mod rate;
-pub mod uint;
 pub mod rounding;
 pub mod checked;
 

@@ -14,7 +14,7 @@ pub use instructions::*;
 pub use state::*;
 pub use utils::*;
 
-declare_id!("5B6ex5JPZMv6t2tHzi4iz1tLb3y8JCqcPpefRqq68wGH");
+declare_id!("BKMe5vFR9jQrEEeC6jYQ6boFQ9gKa1GRQ2dm5ARuKQT8");
 
 #[program]
 pub mod guardian {

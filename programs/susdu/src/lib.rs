@@ -12,7 +12,7 @@ pub use events::*;
 pub use instructions::*;
 pub use state::*;
 
-declare_id!("2J7qaFqKNUA2AexBxuRzpbwUXzJEdXUPTjRn487x1YFS");
+declare_id!("BQVfERSxGzQJ2fzH1LkSqhBqKmHfED3FtvdCr1Un3pqm");
 
 #[program]
 pub mod susdu {

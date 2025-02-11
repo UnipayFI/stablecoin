@@ -1,0 +1,28 @@
+[toolchain]
+anchor_version = "0.30.1"
+solana_version = "2.0.14"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+guardian = "BKMe5vFR9jQrEEeC6jYQ6boFQ9gKa1GRQ2dm5ARuKQT8"
+susdu = "BQVfERSxGzQJ2fzH1LkSqhBqKmHfED3FtvdCr1Un3pqm"
+usdu = "BUab1wZfgZtXGugZTTjq3GjxL9ycCAA17mXYA3F9FkNv"
+vault = "5GvhWwXLn2kMPJynLEr6w4umZDSMkW75HmRjDmVQrFwR"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "Localnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+
+[test]
+startup_wait = 20000
+shutdown_wait = 2000
+upgradeable = false
