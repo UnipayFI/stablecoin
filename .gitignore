@@ -9,5 +9,5 @@ test-ledger
 .keys
 .env
 
-tests
 app
+tests/accounts.ts
