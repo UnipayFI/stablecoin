@@ -1,9 +1,9 @@
 use anchor_lang::prelude::*;
 
-use crate::state::{AccessRegistry, AccessRole, Role};
-use crate::constants::{ACCESS_REGISTRY_SEED};
+use crate::constants::ACCESS_REGISTRY_SEED;
 use crate::error::GuardianError;
 use crate::events::AccessRoleRevoked;
+use crate::state::{AccessRegistry, AccessRole, Role};
 use crate::utils::has_role;
 
 #[derive(Accounts)]
@@ -30,9 +30,7 @@ pub struct RevokeRole<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub(crate) fn process_revoke_role(
-    ctx: Context<RevokeRole>,
-) -> Result<()> {
+pub(crate) fn process_revoke_role(ctx: Context<RevokeRole>) -> Result<()> {
     require!(
         has_role(
             &ctx.accounts.access_registry,

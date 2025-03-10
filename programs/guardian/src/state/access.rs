@@ -12,15 +12,15 @@ pub enum Role {
     // SUSDU roles
     SusduMinter,
     SusduRedeemer,
-    SusduRedistributor,
+    SusduDistributor,
 
     // Vault roles
     CollateralDepositor,
     CollateralWithdrawer,
     UsduStaker,
     UsduUnstaker,
-    GrandMaster,
-    DistributeRewarder,
+    VaultAdmin,
+    RewardDistributor,
 }
 
 impl Role {
@@ -41,14 +41,14 @@ impl Display for Role {
 
             Role::SusduMinter => "susdu_minter",
             Role::SusduRedeemer => "susdu_redeemer",
-            Role::SusduRedistributor => "susdu_redistributor",
+            Role::SusduDistributor => "susdu_distributor",
 
             Role::CollateralDepositor => "collateral_depositor",
             Role::CollateralWithdrawer => "collateral_withdrawer",
             Role::UsduStaker => "usdu_staker",
             Role::UsduUnstaker => "usdu_unstaker",
-            Role::GrandMaster => "grand_master",
-            Role::DistributeRewarder => "distribute_rewarder",
+            Role::VaultAdmin => "vault_admin",
+            Role::RewardDistributor => "reward_distributor",
         };
         write!(f, "{}", role_str)
     }
@@ -58,6 +58,7 @@ impl Display for Role {
 #[derive(Debug, InitSpace)]
 pub struct AccessRegistry {
     pub admin: Pubkey,
+    pub pending_admin: Pubkey,
     pub bump: u8,
     pub is_initialized: bool,
 }

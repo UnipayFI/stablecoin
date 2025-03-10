@@ -2,28 +2,51 @@ use anchor_lang::prelude::*;
 
 #[error_code]
 pub enum SusduError {
-    /// config errors
+    // Config related errors
     #[msg("Config already initialized")]
     ConfigAlreadyInitialized,
     #[msg("Config not initialized")]
     ConfigNotInitialized,
     #[msg("Config already setup susdu")]
-    ConfigAlreadySetupSusdu, 
+    ConfigAlreadySetupSusdu,
     #[msg("Config not setup susdu")]
     ConfigNotSetupSusdu,
+
+    // Permission related errors
+    #[msg("Unauthorized role")]
+    UnauthorizedRole,
+    #[msg("Invalid admin authority")]
+    InvalidAdminAuthority,
+
+    // Token related errors
     #[msg("Insufficient susdu")]
     InsufficientSusdu,
+    #[msg("Amount must be greater than zero")]
+    AmountMustBeGreaterThanZero,
+    #[msg("Invalid susdu amount")]
+    InvalidSusduAmount,
+    #[msg("Invalid susdu token account")]
+    InvalidSusduTokenAccount,
+    #[msg("Invalid receiver susdu token account")]
+    InvalidReceiverSusduTokenAccount,
+    #[msg("Invalid susdu token")]
+    InvalidSusduToken,
 
-    // access role
+    // Access control related errors
     #[msg("Access role not initialized")]
     AccessRoleNotInitialized,
     #[msg("Access registry mismatch")]
     AccessRegistryMismatch,
-    #[msg("Unauthorized role")]
-    UnauthorizedRole,
-    #[msg("Invalid receiver associated token address")]
-    InvalidReceiverAssociatedTokenAddress,
+
+    // Math calculation related errors
+    #[msg("Math overflow")]
+    MathOverflow,
+
+    // Admin transfer related errors
+    #[msg("Only the current admin can propose a new admin")]
+    OnlyAdminCanProposeNewAdmin,
+    #[msg("Only the proposed admin can accept the transfer")]
+    OnlyProposedAdminCanAccept,
+    #[msg("No pending admin transfer")]
+    NoPendingAdminTransfer,
 }
-
-
-

@@ -412,15 +412,9 @@ mod tests {
     #[test]
     fn test_checked_decimal_div() {
         // Test basic division
-        assert_eq!(
-            checked_decimal_div(100, -2, 2, 0, -2).unwrap(),
-            50
-        );
+        assert_eq!(checked_decimal_div(100, -2, 2, 0, -2).unwrap(), 50);
         // Test with different exponents
-        assert_eq!(
-            checked_decimal_div(1000, -3, 2, 0, -3).unwrap(),
-            500
-        );
+        assert_eq!(checked_decimal_div(1000, -3, 2, 0, -3).unwrap(), 500);
     }
 
     #[test]

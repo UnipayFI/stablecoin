@@ -25,8 +25,54 @@ pub struct DepositCollateralMintUsduEvent {
 }
 
 #[event]
-pub struct BlacklistAdded {
-    pub user: Pubkey,
-    pub is_frozen_susdu: bool,
-    pub is_frozen_usdu: bool,
+pub struct AdminTransferProposed {
+    pub vault_config: Pubkey,
+    pub current_admin: Pubkey,
+    pub proposed_admin: Pubkey,
+}
+
+#[event]
+pub struct AdminTransferCompleted {
+    pub vault_config: Pubkey,
+    pub previous_admin: Pubkey,
+    pub new_admin: Pubkey,
+}
+
+#[event]
+pub struct VaultConfigInitialized {
+    pub vault_config: Pubkey,
+    pub admin: Pubkey,
+    pub usdu_token: Pubkey,
+    pub susdu_token: Pubkey,
+    pub access_registry: Pubkey,
+    pub cooldown_duration: u64,
+}
+
+#[event]
+pub struct VaultStateInitialized {
+    pub vault_state: Pubkey,
+    pub admin: Pubkey,
+}
+
+#[event]
+pub struct VaultTokenAccountInitialized {
+    pub vault_state: Pubkey,
+    pub token_account: Pubkey,
+}
+
+#[event]
+pub struct UsduRewardDistributed {
+    pub vault_config: Pubkey,
+    pub distributor: Pubkey,
+    pub amount: u64,
+    pub total_staked_usdu_supply: u64,
+    pub timestamp: u64,
+}
+
+#[event]
+pub struct LockedSusduRedistributed {
+    pub from: Pubkey,
+    pub to: Pubkey,
+    pub amount: u64,
+    pub is_burned: bool,
 }

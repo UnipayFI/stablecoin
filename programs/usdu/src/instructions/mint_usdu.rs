@@ -1,16 +1,16 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token_interface::{Token2022, Mint, TokenAccount};
-use anchor_spl::token_2022::{mint_to, MintTo};
 use anchor_spl::associated_token::AssociatedToken;
+use anchor_spl::token_2022::{mint_to, MintTo};
+use anchor_spl::token_interface::{Mint, Token2022, TokenAccount};
 
 use crate::constants::{USDU_CONFIG_SEED, USDU_SEED};
 use crate::error::UsduError;
-use crate::state::UsduConfig;
 use crate::events::UsduTokenMinted;
+use crate::state::UsduConfig;
 
-use guardian::utils::has_role;
-use guardian::state::{AccessRegistry, AccessRole, Role};
 use guardian::constants::{ACCESS_REGISTRY_SEED, ACCESS_ROLE_SEED};
+use guardian::state::{AccessRegistry, AccessRole, Role};
+use guardian::utils::has_role;
 
 #[derive(Accounts)]
 pub struct MintUsdu<'info> {
@@ -57,7 +57,16 @@ pub struct MintUsdu<'info> {
 }
 
 pub fn process_mint_usdu(ctx: Context<MintUsdu>, usdu_amount: u64) -> Result<()> {
-    require!(ctx.accounts.usdu_config.is_usdu_token_initialized, UsduError::ConfigNotSetupUSDU);
+    require!(
+        ctx.accounts.usdu_config.is_usdu_token_initialized,
+        UsduError::ConfigNotSetupUsdu
+    );
+
+    require!(
+        ctx.accounts.usdu_token.key() == ctx.accounts.usdu_config.usdu_token,
+        UsduError::InvalidUsduToken
+    );
+
     require!(
         has_role(
             &ctx.accounts.access_registry,
@@ -67,8 +76,16 @@ pub fn process_mint_usdu(ctx: Context<MintUsdu>, usdu_amount: u64) -> Result<()>
         )?,
         UsduError::UnauthorizedRole
     );
+
+    // 验证金额必须大于零
+    require!(usdu_amount > 0, UsduError::AmountMustBeGreaterThanZero);
+
     let usdu_config = &mut ctx.accounts.usdu_config;
-    usdu_config.total_supply += usdu_amount;
+    usdu_config.total_supply = usdu_config
+        .total_supply
+        .checked_add(usdu_amount)
+        .ok_or(UsduError::MathOverflow)?;
+
     let signer_seeds: &[&[&[u8]]] = &[&[USDU_SEED, &[ctx.accounts.usdu_config.usdu_token_bump]]];
     mint_to(
         CpiContext::new_with_signer(

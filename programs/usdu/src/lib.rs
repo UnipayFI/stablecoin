@@ -8,12 +8,12 @@ pub mod state;
 use anchor_lang::prelude::*;
 
 pub use constants::*;
+pub use error::*;
 pub use events::*;
 pub use instructions::*;
 pub use state::*;
-pub use error::*;
 
-declare_id!("BUab1wZfgZtXGugZTTjq3GjxL9ycCAA17mXYA3F9FkNv");
+declare_id!("2EfRohHd6CMfGPYTq16g4UYCD6f6vPzUpq1urgbwD4QB");
 
 #[program]
 pub mod usdu {
@@ -33,5 +33,13 @@ pub mod usdu {
 
     pub fn redeem_usdu(ctx: Context<RedeemUsdu>, usdu_amount: u64) -> Result<()> {
         process_redeem_usdu(ctx, usdu_amount)
+    }
+
+    pub fn propose_new_admin(ctx: Context<ProposeNewAdmin>) -> Result<()> {
+        process_propose_new_admin(ctx)
+    }
+
+    pub fn accept_admin_transfer(ctx: Context<AcceptAdminTransfer>) -> Result<()> {
+        process_accept_admin_transfer(ctx)
     }
 }

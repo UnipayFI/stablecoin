@@ -1,9 +1,9 @@
 use anchor_lang::prelude::*;
 
-use crate::state::{AccessRegistry, AccessRole, Role};
 use crate::constants::{ACCESS_REGISTRY_SEED, ACCESS_ROLE_SEED};
 use crate::error::GuardianError;
 use crate::events::AccessRoleAssigned;
+use crate::state::{AccessRegistry, AccessRole, Role};
 use crate::utils::has_role;
 #[derive(Accounts)]
 #[instruction(role: Role)]
@@ -32,14 +32,13 @@ pub struct AssignRole<'info> {
     #[account(mut)]
     pub guardian_admin: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
-
 }
 
-pub(crate) fn process_assign_role(
-    ctx: Context<AssignRole>,
-    role: Role
-) -> Result<()> {
-    require!(!ctx.accounts.assign_role.is_initialized, GuardianError::AccessRoleAlreadyInitialized);
+pub(crate) fn process_assign_role(ctx: Context<AssignRole>, role: Role) -> Result<()> {
+    require!(
+        !ctx.accounts.assign_role.is_initialized,
+        GuardianError::AccessRoleAlreadyInitialized
+    );
     require!(
         has_role(
             &ctx.accounts.access_registry,
@@ -60,5 +59,3 @@ pub(crate) fn process_assign_role(
     });
     Ok(())
 }
-
-

@@ -29,3 +29,16 @@ pub struct UsduTokenRedeemed {
     pub caller_token_account: Pubkey,
 }
 
+#[event]
+pub struct AdminTransferProposed {
+    pub usdu_config: Pubkey,
+    pub current_admin: Pubkey,
+    pub proposed_admin: Pubkey,
+}
+
+#[event]
+pub struct AdminTransferCompleted {
+    pub usdu_config: Pubkey,
+    pub previous_admin: Pubkey,
+    pub new_admin: Pubkey,
+}

@@ -4,6 +4,7 @@ use anchor_lang::prelude::*;
 #[derive(Debug, InitSpace)]
 pub struct UsduConfig {
     pub admin: Pubkey,
+    pub pending_admin: Pubkey,
     pub access_registry: Pubkey,
     pub bump: u8,
     pub is_initialized: bool,

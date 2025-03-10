@@ -9,6 +9,9 @@ pub const VESTING_PERIOD: u64 = 60 * 60 * 8; // 8 hours
 #[constant]
 pub const MIN_SHARES: u64 = 10_u64.pow(6);
 
+#[constant]
+pub const INITIAL_DEPOSIT_AMOUNT: u64 = 1000 * 10_u64.pow(6);
+
 #[account]
 #[derive(Debug, Default)]
 pub struct VaultConfig {
@@ -16,14 +19,16 @@ pub struct VaultConfig {
     pub bump: u8,
 
     pub admin: Pubkey,
+    pub pending_admin: Pubkey,
     pub usdu: Pubkey,
     pub susdu: Pubkey,
     pub access_registry: Pubkey,
 
     pub cooldown_duration: u64,
-    pub total_usdu_supply: u64,
+    pub total_staked_usdu_supply: u64,
     pub vesting_amount: u64,
     pub last_distribution_timestamp: u64,
+    pub has_initial_deposit: bool,
 }
 
 #[account]
@@ -37,12 +42,12 @@ pub struct VaultState {
     pub vault_susdu_token_account_bump: u8,
     pub vault_usdu_token_account_bump: u8,
     pub vault_stake_pool_usdu_token_account_bump: u8,
-    pub vault_slio_usdu_token_account_bump: u8,
+    pub vault_silo_usdu_token_account_bump: u8,
 
     pub vault_susdu_token_account: Pubkey,
     pub vault_usdu_token_account: Pubkey,
     pub vault_stake_pool_usdu_token_account: Pubkey,
-    pub vault_slio_usdu_token_account: Pubkey,
+    pub vault_silo_usdu_token_account: Pubkey,
 }
 
 impl VaultState {
@@ -54,20 +59,34 @@ impl VaultConfig {
 
     pub fn total_assets(&self) -> u64 {
         let unvested_amount = self.get_unvested_amount();
-        let result = self.total_usdu_supply
+        let result = self
+            .total_staked_usdu_supply
             .checked_sub(unvested_amount)
             .expect("Math overflow");
-        msg!("total asset about usdu: {}", self.total_usdu_supply);
+        msg!("total asset about usdu: {}", self.total_staked_usdu_supply);
         msg!("unvested amount: {}", unvested_amount);
         msg!("result: {}", result);
         result
     }
 
+    pub fn check_initial_deposit(&self, deposit_amount: u64) -> Result<()> {
+        if !self.has_initial_deposit {
+            require!(
+                deposit_amount >= INITIAL_DEPOSIT_AMOUNT,
+                VaultError::InsufficientInitialDeposit
+            );
+        }
+        Ok(())
+    }
+
     pub fn check_min_shares(&self, total_shares: u64) -> Result<()> {
-        if total_shares == 0 {
+        if !self.has_initial_deposit {
             return Ok(());
         }
-        require!(total_shares >= MIN_SHARES, VaultError::InsufficientMinShares);
+        require!(
+            total_shares >= MIN_SHARES,
+            VaultError::InsufficientMinShares
+        );
         Ok(())
     }
 
@@ -99,12 +118,11 @@ impl VaultConfig {
             return assets.mulDiv(totalShares() + 10 ** _decimalsOffset(), totalAssets() + 1, rounding);
         }
     */
-    fn convert_to_shares(
-        &self,
-        assets: u64,
-        total_shares: u64,
-        rounding: Rounding,
-    ) -> u64 {
+    // Note: We use Rounding::Floor to ensure the vault never mints more SUSDU than it should,
+    // preventing inflation. This is consistent with Ethena's implementation.
+    // There will be a small precision loss (dust) due to rounding, which is an accepted trade-off
+    // for increased security.
+    fn convert_to_shares(&self, assets: u64, total_shares: u64, rounding: Rounding) -> u64 {
         let numerator = (assets as u128)
             .checked_mul(total_shares as u128 + 1u128)
             .expect("Math overflow");
@@ -132,12 +150,11 @@ impl VaultConfig {
             return shares.mulDiv(totalAssets() + 1, totalShares() + 10 ** _decimalsOffset(), rounding);
         }
     */
-    fn convert_to_assets(
-        &self,
-        shares: u64,
-        total_shares: u64,
-        rounding: Rounding,
-    ) -> u64 {
+    // Note: We use Rounding::Floor to ensure consistent behavior with convert_to_shares.
+    // This is consistent with Ethena's implementation.
+    // There will be a small precision loss (dust) due to rounding, which is an accepted trade-off
+    // for increased security.
+    fn convert_to_assets(&self, shares: u64, total_shares: u64, rounding: Rounding) -> u64 {
         let numerator = (shares as u128)
             .checked_mul(self.total_assets() as u128 + 1u128)
             .expect("Math overflow");
@@ -158,6 +175,7 @@ impl VaultConfig {
     }
 
     /// ERC4626 preview deposit
+    /// Uses Rounding::Floor to ensure the vault never mints more SUSDU than it should
     pub(crate) fn preview_deposit(&self, assets: u64, total_shares: u64) -> u64 {
         self.convert_to_shares(assets, total_shares, Rounding::Floor)
     }
@@ -166,13 +184,14 @@ impl VaultConfig {
     // pub(crate) fn preview_withdraw(&self, assets: u128, total_shares: u128) -> u128 {
     //     self.convert_to_shares(assets, total_shares, true)
     // }
-    
+
     /// ERC4626 preview mint
     // pub(crate) fn preview_mint(&self, shares: u128, total_shares: u128) -> u128 {
     //     self.convert_to_assets(shares, total_shares, false)
     // }
 
     /// ERC4626 preview redeem
+    /// Uses Rounding::Floor to ensure consistent behavior with preview_deposit
     pub(crate) fn preview_redeem(&self, shares: u64, total_shares: u64) -> u64 {
         self.convert_to_assets(shares, total_shares, Rounding::Floor)
     }

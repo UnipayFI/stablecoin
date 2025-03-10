@@ -1,15 +1,18 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token_interface::{Token2022, Mint, TokenAccount};
 use anchor_spl::token_2022::{burn, Burn};
+use anchor_spl::token_interface::{Mint, Token2022, TokenAccount};
 
-use crate::constants::{SUSDU_CONFIG_SEED};
+use crate::constants::SUSDU_CONFIG_SEED;
 use crate::error::SusduError;
-use crate::state::SusduConfig;
 use crate::events::SusduTokenRedeemed;
+use crate::state::SusduConfig;
 
-use guardian::utils::has_role;
-use guardian::{state::{AccessRegistry, AccessRole}, Role};
 use guardian::constants::{ACCESS_REGISTRY_SEED, ACCESS_ROLE_SEED};
+use guardian::utils::has_role;
+use guardian::{
+    state::{AccessRegistry, AccessRole},
+    Role,
+};
 
 #[derive(Accounts)]
 pub struct RedeemSusdu<'info> {
@@ -49,8 +52,21 @@ pub struct RedeemSusdu<'info> {
 }
 
 pub fn process_redeem_susdu(ctx: Context<RedeemSusdu>, susdu_amount: u64) -> Result<()> {
-    require!(ctx.accounts.susdu_config.is_susdu_token_initialized, SusduError::ConfigNotSetupSusdu);
-    require!(ctx.accounts.susdu_config.total_supply >= susdu_amount, SusduError::InsufficientSusdu);
+    require!(
+        ctx.accounts.susdu_config.is_susdu_token_initialized,
+        SusduError::ConfigNotSetupSusdu
+    );
+
+    require!(
+        ctx.accounts.susdu_token.key() == ctx.accounts.susdu_config.susdu_token,
+        SusduError::InvalidSusduToken
+    );
+
+    require!(susdu_amount > 0, SusduError::AmountMustBeGreaterThanZero);
+    require!(
+        ctx.accounts.susdu_config.total_supply >= susdu_amount,
+        SusduError::InsufficientSusdu
+    );
 
     require!(
         has_role(

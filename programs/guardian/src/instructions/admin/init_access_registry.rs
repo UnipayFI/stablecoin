@@ -1,9 +1,9 @@
 use anchor_lang::prelude::*;
 
-use crate::state::AccessRegistry;
 use crate::constants::ACCESS_REGISTRY_SEED;
 use crate::error::GuardianError;
 use crate::events::AccessRegistryInitialized;
+use crate::state::AccessRegistry;
 
 #[derive(Accounts)]
 pub struct InitAccessRegistry<'info> {
@@ -27,6 +27,7 @@ pub(crate) fn process_init_access_registry(ctx: Context<InitAccessRegistry>) -> 
         GuardianError::AccessRegistryAlreadyInitialized
     );
     ctx.accounts.access_registry.admin = ctx.accounts.admin.key();
+    ctx.accounts.access_registry.pending_admin = Pubkey::default();
     ctx.accounts.access_registry.bump = ctx.bumps.access_registry;
     ctx.accounts.access_registry.is_initialized = true;
     emit!(AccessRegistryInitialized {

@@ -1,28 +1,21 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::{rent::Rent, system_instruction::transfer, program::invoke};
+use anchor_lang::solana_program::{program::invoke, rent::Rent, system_instruction::transfer};
 use anchor_spl::{
-    token_interface::{
-        Mint, Token2022, spl_token_metadata_interface::state::TokenMetadata,
-        token_metadata_initialize, TokenMetadataInitialize,
-    },
     token_2022::spl_token_2022::{
-        extension::{
-            BaseStateWithExtensions,
-            Extension,
-            StateWithExtensions,
-        },
+        extension::{BaseStateWithExtensions, Extension, StateWithExtensions},
         state::Mint as StateMint,
+    },
+    token_interface::{
+        spl_token_metadata_interface::state::TokenMetadata, token_metadata_initialize, Mint,
+        Token2022, TokenMetadataInitialize,
     },
 };
 use spl_type_length_value::variable_len_pack::VariableLenPack;
 
-use crate::constants::{
-    USDU_CONFIG_SEED, 
-    USDU_SEED,
-};
-use crate::state::UsduConfig;
+use crate::constants::{USDU_CONFIG_SEED, USDU_SEED};
 use crate::error::UsduError;
 use crate::events::UsduTokenCreated;
+use crate::state::UsduConfig;
 
 fn get_mint_extensible_with_len_extension<T: Extension + VariableLenPack>(
     mint_account: &mut AccountInfo,
@@ -50,7 +43,6 @@ pub struct CreateUsdu<'info> {
         payer = admin,
         seeds = [USDU_SEED],
         bump,
-        mint::freeze_authority = usdu_token,
         mint::authority = usdu_token,
         mint::decimals = decimals,
         mint::token_program = token_program,
@@ -58,13 +50,16 @@ pub struct CreateUsdu<'info> {
         extensions::metadata_pointer::metadata_address = usdu_token,
     )]
     pub usdu_token: InterfaceAccount<'info, Mint>,
-    
+
     pub token_program: Program<'info, Token2022>,
     pub system_program: Program<'info, System>,
 }
 
 pub fn process_create_usdu(ctx: Context<CreateUsdu>, decimals: u8) -> Result<()> {
-    require!(!ctx.accounts.usdu_config.is_usdu_token_initialized, UsduError::ConfigAlreadySetupUSDU);
+    require!(
+        !ctx.accounts.usdu_config.is_usdu_token_initialized,
+        UsduError::ConfigAlreadySetupUsdu
+    );
 
     ctx.accounts.usdu_config.usdu_token = ctx.accounts.usdu_token.key();
     ctx.accounts.usdu_config.usdu_token_bump = ctx.bumps.usdu_token;
@@ -77,12 +72,7 @@ pub fn process_create_usdu(ctx: Context<CreateUsdu>, decimals: u8) -> Result<()>
 
     // create metadata account
     let usdu_token_bump = &[ctx.bumps.usdu_token];
-    let seeds = &[
-        &[
-            USDU_SEED,
-            usdu_token_bump,
-        ][..],
-    ];
+    let seeds = &[&[USDU_SEED, usdu_token_bump][..]];
     token_metadata_initialize(
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
@@ -97,7 +87,7 @@ pub fn process_create_usdu(ctx: Context<CreateUsdu>, decimals: u8) -> Result<()>
         ),
         name.clone(),
         symbol.clone(),
-        uri.clone()
+        uri.clone(),
     )?;
 
     ctx.accounts.usdu_token.reload()?;
@@ -109,7 +99,8 @@ pub fn process_create_usdu(ctx: Context<CreateUsdu>, decimals: u8) -> Result<()>
     assert_eq!(metadata.uri, uri);
 
     // transfer rent to usdu_token
-    let extra_lamports = Rent::get()?.minimum_balance(usdu_token_account.data_len()) - usdu_token_account.lamports();
+    let extra_lamports =
+        Rent::get()?.minimum_balance(usdu_token_account.data_len()) - usdu_token_account.lamports();
     if extra_lamports > 0 {
         invoke(
             &transfer(
@@ -124,7 +115,7 @@ pub fn process_create_usdu(ctx: Context<CreateUsdu>, decimals: u8) -> Result<()>
             ],
         )?;
     }
-    
+
     emit!(UsduTokenCreated {
         usdu_token: ctx.accounts.usdu_token.key(),
         decimals,

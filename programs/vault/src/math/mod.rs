@@ -1,12 +1,15 @@
 //! variety of math helper functions sourced spl lending program library
 
-pub mod common;
-pub mod error;
-pub mod rounding;
 pub mod checked;
+pub mod common;
+pub mod decimal;
+pub mod error;
+pub mod rate;
+pub mod rounding;
+pub mod uint;
 
-pub use rounding::Rounding;
 pub use checked::*;
+pub use rounding::Rounding;
 
 pub fn calculate_underlying_to_withdraw(
     amount: u64,

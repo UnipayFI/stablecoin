@@ -2,24 +2,51 @@ use anchor_lang::prelude::*;
 
 #[error_code]
 pub enum UsduError {
-    /// config errors
+    // Config related errors
     #[msg("Config already initialized")]
     ConfigAlreadyInitialized,
     #[msg("Config not initialized")]
     ConfigNotInitialized,
     #[msg("Config already setup usdu")]
-    ConfigAlreadySetupUSDU, 
+    ConfigAlreadySetupUsdu,
     #[msg("Config not setup usdu")]
-    ConfigNotSetupUSDU,
+    ConfigNotSetupUsdu,
+
+    // Permission related errors
+    #[msg("Unauthorized role")]
+    UnauthorizedRole,
+    #[msg("Invalid admin authority")]
+    InvalidAdminAuthority,
+
+    // Token related errors
     #[msg("Insufficient usdu")]
     InsufficientUsdu,
+    #[msg("Amount must be greater than zero")]
+    AmountMustBeGreaterThanZero,
+    #[msg("Invalid usdu amount")]
+    InvalidUsduAmount,
+    #[msg("Invalid usdu token account")]
+    InvalidUsduTokenAccount,
+    #[msg("Invalid receiver usdu token account")]
+    InvalidReceiverUsduTokenAccount,
+    #[msg("Invalid usdu token")]
+    InvalidUsduToken,
 
-    // access role
+    // Access control related errors
     #[msg("Access role not initialized")]
     AccessRoleNotInitialized,
     #[msg("Access registry mismatch")]
     AccessRegistryMismatch,
-    #[msg("Unauthorized role")]
-    UnauthorizedRole,
-}
 
+    // Math calculation related errors
+    #[msg("Math overflow")]
+    MathOverflow,
+
+    // Admin transfer related errors
+    #[msg("Only the current admin can propose a new admin")]
+    OnlyAdminCanProposeNewAdmin,
+    #[msg("Only the proposed admin can accept the transfer")]
+    OnlyProposedAdminCanAccept,
+    #[msg("No pending admin transfer")]
+    NoPendingAdminTransfer,
+}

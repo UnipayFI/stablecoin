@@ -1,16 +1,16 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token_interface::{Token2022, Mint, TokenAccount};
-use anchor_spl::token_2022::{mint_to, MintTo};
 use anchor_spl::associated_token::AssociatedToken;
+use anchor_spl::token_2022::{mint_to, MintTo};
+use anchor_spl::token_interface::{Mint, Token2022, TokenAccount};
 
 use crate::constants::{SUSDU_CONFIG_SEED, SUSDU_SEED};
 use crate::error::SusduError;
-use crate::state::SusduConfig;
 use crate::events::SusduTokenMinted;
+use crate::state::SusduConfig;
 
-use guardian::utils::has_role;
-use guardian::state::{AccessRegistry, AccessRole, Role};
 use guardian::constants::{ACCESS_REGISTRY_SEED, ACCESS_ROLE_SEED};
+use guardian::state::{AccessRegistry, AccessRole, Role};
+use guardian::utils::has_role;
 
 #[derive(Accounts)]
 pub struct MintSusdu<'info> {
@@ -57,7 +57,15 @@ pub struct MintSusdu<'info> {
 }
 
 pub fn process_mint_susdu(ctx: Context<MintSusdu>, susdu_amount: u64) -> Result<()> {
-    require!(ctx.accounts.susdu_config.is_susdu_token_initialized, SusduError::ConfigNotSetupSusdu);
+    require!(
+        ctx.accounts.susdu_config.is_susdu_token_initialized,
+        SusduError::ConfigNotSetupSusdu
+    );
+
+    require!(
+        ctx.accounts.susdu_token.key() == ctx.accounts.susdu_config.susdu_token,
+        SusduError::InvalidSusduToken
+    );
 
     require!(
         has_role(
@@ -69,9 +77,14 @@ pub fn process_mint_susdu(ctx: Context<MintSusdu>, susdu_amount: u64) -> Result<
         SusduError::UnauthorizedRole
     );
 
+    require!(susdu_amount > 0, SusduError::AmountMustBeGreaterThanZero);
+
     let signer_seeds: &[&[&[u8]]] = &[&[SUSDU_SEED, &[ctx.accounts.susdu_config.susdu_token_bump]]];
     let susdu_config = &mut ctx.accounts.susdu_config;
-    susdu_config.total_supply += susdu_amount;
+    susdu_config.total_supply = susdu_config
+        .total_supply
+        .checked_add(susdu_amount)
+        .ok_or(SusduError::MathOverflow)?;
     mint_to(
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),

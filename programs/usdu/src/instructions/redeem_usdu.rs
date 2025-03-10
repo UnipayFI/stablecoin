@@ -1,15 +1,15 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token_interface::{Token2022, Mint, TokenAccount};
 use anchor_spl::token_2022::{burn, Burn};
+use anchor_spl::token_interface::{Mint, Token2022, TokenAccount};
 
-use crate::constants::{USDU_CONFIG_SEED};
+use crate::constants::USDU_CONFIG_SEED;
 use crate::error::UsduError;
-use crate::state::UsduConfig;
 use crate::events::UsduTokenRedeemed;
+use crate::state::UsduConfig;
 
-use guardian::utils::has_role;
-use guardian::state::{AccessRegistry, AccessRole, Role};
 use guardian::constants::{ACCESS_REGISTRY_SEED, ACCESS_ROLE_SEED};
+use guardian::state::{AccessRegistry, AccessRole, Role};
+use guardian::utils::has_role;
 
 #[derive(Accounts)]
 pub struct RedeemUsdu<'info> {
@@ -49,8 +49,21 @@ pub struct RedeemUsdu<'info> {
 }
 
 pub fn process_redeem_usdu(ctx: Context<RedeemUsdu>, usdu_amount: u64) -> Result<()> {
-    require!(ctx.accounts.usdu_config.is_usdu_token_initialized, UsduError::ConfigNotSetupUSDU);
-    require!(ctx.accounts.usdu_config.total_supply >= usdu_amount, UsduError::InsufficientUsdu);
+    require!(
+        ctx.accounts.usdu_config.is_usdu_token_initialized,
+        UsduError::ConfigNotSetupUsdu
+    );
+
+    require!(
+        ctx.accounts.usdu_token.key() == ctx.accounts.usdu_config.usdu_token,
+        UsduError::InvalidUsduToken
+    );
+
+    require!(usdu_amount > 0, UsduError::AmountMustBeGreaterThanZero);
+    require!(
+        ctx.accounts.usdu_config.total_supply >= usdu_amount,
+        UsduError::InsufficientUsdu
+    );
 
     require!(
         has_role(

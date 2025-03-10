@@ -14,7 +14,7 @@ pub use instructions::*;
 pub use state::*;
 pub use utils::*;
 
-declare_id!("BKMe5vFR9jQrEEeC6jYQ6boFQ9gKa1GRQ2dm5ARuKQT8");
+declare_id!("69S9GEFC4vimP2PnMrVFzpAZeD6u2EUi24PUWiYF8wtt");
 
 #[program]
 pub mod guardian {
@@ -30,5 +30,13 @@ pub mod guardian {
 
     pub fn revoke_role(ctx: Context<RevokeRole>) -> Result<()> {
         process_revoke_role(ctx)
+    }
+
+    pub fn propose_new_admin(ctx: Context<ProposeNewAdmin>) -> Result<()> {
+        process_propose_new_admin(ctx)
+    }
+
+    pub fn accept_admin_transfer(ctx: Context<AcceptAdminTransfer>) -> Result<()> {
+        process_accept_admin_transfer(ctx)
     }
 }

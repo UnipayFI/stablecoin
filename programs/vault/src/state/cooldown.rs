@@ -18,5 +18,4 @@ impl Cooldown {
     pub fn is_cooldown_active(&self) -> bool {
         self.cooldown_end > Clock::get().unwrap().unix_timestamp as u64
     }
-
 }

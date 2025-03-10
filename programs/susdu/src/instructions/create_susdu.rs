@@ -1,27 +1,28 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::{rent::Rent, system_instruction::transfer, program::invoke};
+use anchor_lang::solana_program::{program::invoke, rent::Rent, system_instruction::transfer};
 use anchor_spl::{
-    token_interface::{
-        Mint, Token2022, spl_token_metadata_interface::state::TokenMetadata,
-        token_metadata_initialize, TokenMetadataInitialize,
-        spl_pod::optional_keys::OptionalNonZeroPubkey,
-    },
     token_2022::spl_token_2022::{
         extension::{
-            BaseStateWithExtensions,
-            Extension,
-            StateWithExtensions,
-            permanent_delegate::PermanentDelegate
+            permanent_delegate::PermanentDelegate, transfer_hook::TransferHook,
+            BaseStateWithExtensions, Extension, StateWithExtensions,
         },
         state::Mint as StateMint,
+    },
+    token_interface::{
+        spl_pod::optional_keys::OptionalNonZeroPubkey,
+        spl_token_metadata_interface::state::TokenMetadata, token_metadata_initialize, Mint,
+        Token2022, TokenMetadataInitialize,
     },
 };
 use spl_type_length_value::variable_len_pack::VariableLenPack;
 
 use crate::constants::{SUSDU_CONFIG_SEED, SUSDU_SEED};
-use crate::state::SusduConfig;
 use crate::error::SusduError;
 use crate::events::SusduTokenCreated;
+use crate::state::SusduConfig;
+
+// Blacklist hook program ID
+pub const BLACKLIST_HOOK_PROGRAM_ID: &str = "2qLbEAAHfPwJ7vixH7BuSdfJzvn9LTavfM69B5Q149DZ";
 
 fn get_mint_with_len_extension<'a, T: Extension + VariableLenPack>(
     mint_account: &'a mut AccountInfo,
@@ -32,12 +33,17 @@ fn get_mint_with_len_extension<'a, T: Extension + VariableLenPack>(
     Ok(extension_data)
 }
 
-fn get_mint_with_permanent_delegate(
-    mint_account: &mut AccountInfo,
-) -> Result<PermanentDelegate> {
+fn get_mint_with_permanent_delegate(mint_account: &mut AccountInfo) -> Result<PermanentDelegate> {
     let mint_data = mint_account.data.borrow();
     let mint_with_extension = StateWithExtensions::<StateMint>::unpack(&mint_data)?;
     let extension_data = mint_with_extension.get_extension::<PermanentDelegate>()?;
+    Ok(*extension_data)
+}
+
+fn get_mint_with_transfer_hook(mint_account: &mut AccountInfo) -> Result<TransferHook> {
+    let mint_data = mint_account.data.borrow();
+    let mint_with_extension = StateWithExtensions::<StateMint>::unpack(&mint_data)?;
+    let extension_data = mint_with_extension.get_extension::<TransferHook>()?;
     Ok(*extension_data)
 }
 
@@ -51,6 +57,7 @@ pub struct CreateSusdu<'info> {
         seeds = [SUSDU_CONFIG_SEED],
         bump = susdu_config.bump,
         has_one = admin,
+        constraint = susdu_config.is_initialized @ SusduError::ConfigNotInitialized,
     )]
     pub susdu_config: Box<Account<'info, SusduConfig>>,
 
@@ -59,13 +66,14 @@ pub struct CreateSusdu<'info> {
         payer = admin,
         seeds = [SUSDU_SEED],
         bump,
-        mint::freeze_authority = susdu_token,
         mint::authority = susdu_token,
         mint::decimals = decimals,
         mint::token_program = token_program,
         extensions::metadata_pointer::authority = susdu_token,
         extensions::metadata_pointer::metadata_address = susdu_token,
         extensions::permanent_delegate::delegate = susdu_token,
+        extensions::transfer_hook::authority = susdu_token,
+        extensions::transfer_hook::program_id = susdu_config.blacklist_hook_program_id,
     )]
     pub susdu_token: InterfaceAccount<'info, Mint>,
 
@@ -74,25 +82,23 @@ pub struct CreateSusdu<'info> {
 }
 
 pub fn process_create_susdu(ctx: Context<CreateSusdu>, decimals: u8) -> Result<()> {
-    require!(!ctx.accounts.susdu_config.is_susdu_token_initialized, SusduError::ConfigAlreadySetupSusdu);
+    require!(
+        !ctx.accounts.susdu_config.is_susdu_token_initialized,
+        SusduError::ConfigAlreadySetupSusdu
+    );
 
     ctx.accounts.susdu_config.susdu_token = ctx.accounts.susdu_token.key();
     ctx.accounts.susdu_config.susdu_token_bump = ctx.bumps.susdu_token;
     ctx.accounts.susdu_config.is_susdu_token_initialized = true;
     ctx.accounts.susdu_config.total_supply = 0;
-    
+
     let name = "SUSDU - Program Controlled Token".to_string();
     let symbol = "SUSDU".to_string();
     let uri = "https://bafybeib5rbwqc5hj52hhc6k6g4c5qfhlq2jkkeujypc3okvm7dqoypgcku.ipfs.w3s.link/usdu.png".to_string();
 
     // create metadata
     let susdu_token_bump = &[ctx.bumps.susdu_token];
-    let seeds = &[
-        &[
-            SUSDU_SEED,
-            susdu_token_bump,
-        ][..],
-    ];
+    let seeds = &[&[SUSDU_SEED, susdu_token_bump][..]];
     token_metadata_initialize(
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
@@ -107,7 +113,7 @@ pub fn process_create_susdu(ctx: Context<CreateSusdu>, decimals: u8) -> Result<(
         ),
         name.clone(),
         symbol.clone(),
-        uri.clone()
+        uri.clone(),
     )?;
 
     ctx.accounts.susdu_token.reload()?;
@@ -119,10 +125,21 @@ pub fn process_create_susdu(ctx: Context<CreateSusdu>, decimals: u8) -> Result<(
     assert_eq!(metadata.uri, uri);
 
     let delegate = get_mint_with_permanent_delegate(susdu_token_account)?;
-    assert_eq!(delegate.delegate, OptionalNonZeroPubkey::try_from(Some(ctx.accounts.susdu_token.key()))?);
+    assert_eq!(
+        delegate.delegate,
+        OptionalNonZeroPubkey::try_from(Some(ctx.accounts.susdu_token.key()))?
+    );
+
+    // Verify transfer hook
+    let transfer_hook = get_mint_with_transfer_hook(susdu_token_account)?;
+    assert_eq!(
+        transfer_hook.program_id,
+        OptionalNonZeroPubkey::try_from(Some(ctx.accounts.susdu_config.blacklist_hook_program_id))?
+    );
 
     // transfer rent to susdu_token
-    let extra_lamports = Rent::get()?.minimum_balance(susdu_token_account.data_len()) - susdu_token_account.lamports();
+    let extra_lamports = Rent::get()?.minimum_balance(susdu_token_account.data_len())
+        - susdu_token_account.lamports();
     if extra_lamports > 0 {
         invoke(
             &transfer(

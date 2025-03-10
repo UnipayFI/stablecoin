@@ -2,43 +2,77 @@ use anchor_lang::prelude::*;
 
 #[error_code]
 pub enum GuardianError {
-    // Mustbe Role Errors
-    #[msg("Must be usdu minter")]
-    MustBeUsduMinter,
-    #[msg("Must be usdu redeemer")]
-    MustBeUsduRedeemer,
-    #[msg("Must be susdu minter")]
-    MustBeSusduMinter,
-    #[msg("Must be susdu redeemer")]
-    MustBeSusduRedeemer,
-    #[msg("Must be vault usdu minter")]
-    MustBeVaultUsduMinter,
-    #[msg("Must be vault usdu redeemer")]
-    MustBeVaultUsduRedeemer,
-    #[msg("Must be vault susdu minter")]
-    MustBeVaultSusduMinter,
-    #[msg("Must be vault susdu redeemer")]
-    MustBeVaultSusduRedeemer,
+    // Role permission related errors
+    #[msg("Unauthorized: must be guardian admin")]
+    UnauthorizedGuardianAdmin,
 
-    // Access Registry Errors
+    // USDU related role errors
+    #[msg("Unauthorized: must be usdu minter")]
+    UnauthorizedUsduMinter,
+    #[msg("Unauthorized: must be usdu redeemer")]
+    UnauthorizedUsduRedeemer,
+
+    // SUSDU related role errors
+    #[msg("Unauthorized: must be susdu minter")]
+    UnauthorizedSusduMinter,
+    #[msg("Unauthorized: must be susdu redeemer")]
+    UnauthorizedSusduRedeemer,
+    #[msg("Unauthorized: must be susdu distributor")]
+    UnauthorizedSusduDistributor,
+
+    // Vault related role errors
+    #[msg("Unauthorized: must be collateral depositor")]
+    UnauthorizedCollateralDepositor,
+    #[msg("Unauthorized: must be collateral withdrawer")]
+    UnauthorizedCollateralWithdrawer,
+    #[msg("Unauthorized: must be usdu staker")]
+    UnauthorizedUsduStaker,
+    #[msg("Unauthorized: must be usdu unstaker")]
+    UnauthorizedUsduUnstaker,
+    #[msg("Unauthorized: must be vault admin")]
+    UnauthorizedVaultAdmin,
+    #[msg("Unauthorized: must be reward distributor")]
+    UnauthorizedRewardDistributor,
+
+    // General role errors
+    #[msg("Unauthorized: must have required role")]
+    UnauthorizedRole,
+
+    // Access registry related errors
     #[msg("Access registry already initialized")]
     AccessRegistryAlreadyInitialized,
     #[msg("Access registry not initialized")]
     AccessRegistryNotInitialized,
-    #[msg("Must be access registry admin")]
-    MustBeAccessRegistryAdmin,
+    #[msg("Must be access registry")]
+    MustBeAccessRegistry,
 
-    // Access Role Errors
+    // Access role related errors
     #[msg("Access role already initialized")]
     AccessRoleAlreadyInitialized,
     #[msg("Access role not initialized")]
     AccessRoleNotInitialized,
-    #[msg("Must be access registry")]
-    MustBeAccessRegistry,
+    #[msg("Role already assigned")]
+    RoleAlreadyAssigned,
+    #[msg("Role not assigned")]
+    RoleNotAssigned,
+
+    // Program related errors
     #[msg("Invalid program id")]
     InvalidProgramId,
+    #[msg("Invalid role type")]
+    InvalidRoleType,
+
+    // Permission related errors
     #[msg("Invalid right to assign role")]
     InvalidRightToAssignRole,
     #[msg("Invalid right to revoke role")]
     InvalidRightToRevokeRole,
+
+    // Admin transfer related errors
+    #[msg("Only the current admin can propose a new admin")]
+    OnlyAdminCanProposeNewAdmin,
+    #[msg("Only the proposed admin can accept the transfer")]
+    OnlyProposedAdminCanAccept,
+    #[msg("No pending admin transfer")]
+    NoPendingAdminTransfer,
 }

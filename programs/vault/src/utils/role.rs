@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 use crate::state::VaultConfig;
 
 use guardian::utils::has_role;
-use guardian::{Role, AccessRegistry};
+use guardian::{AccessRegistry, Role};
 
 pub fn has_role_or_admin<'info>(
     vault_config: &Account<VaultConfig>,
@@ -19,6 +19,6 @@ pub fn has_role_or_admin<'info>(
         access_registry,
         &access_role.to_account_info(),
         &authority.to_account_info(),
-        role
+        role,
     )
 }
