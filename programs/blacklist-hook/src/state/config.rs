@@ -5,7 +5,6 @@ pub struct BlacklistHookConfig {
     pub admin: Pubkey,
     pub pending_admin: Pubkey,
     pub bump: u8,
-    pub blacklist: Vec<Pubkey>,
     pub is_initialized: bool,
 }
 

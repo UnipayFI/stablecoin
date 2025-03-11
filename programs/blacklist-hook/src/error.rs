@@ -5,6 +5,12 @@ pub enum BlacklistHookError {
     // Initialize related errors
     #[msg("Config already initialized")]
     ConfigAlreadyInitialized,
+    #[msg("Config not initialized")]
+    ConfigNotInitialized,
+
+    // Mint related errors
+    #[msg("Invalid mint")]
+    InvalidMint,
 
     // Transfer hook related errors
     #[msg("Is not transferring")]
@@ -25,4 +31,10 @@ pub enum BlacklistHookError {
     UserAlreadyInBlacklist,
     #[msg("User is not in blacklist")]
     UserNotInBlacklist,
+    #[msg("Blacklist entry already exists")]
+    BlacklistEntryAlreadyExists,
+    #[msg("Source address blacklisted")]
+    SourceAddressBlacklisted,
+    #[msg("Destination address blacklisted")]
+    DestinationAddressBlacklisted,
 }

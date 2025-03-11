@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token_interface::{Mint, Token2022, TokenAccount};
 
 use susdu::cpi::{accounts::RedistributeSusdu, redistribute_susdu};
@@ -9,9 +10,7 @@ use susdu::SUSDU_CONFIG_SEED;
 use guardian::constants::{ACCESS_REGISTRY_SEED, ACCESS_ROLE_SEED};
 use guardian::state::{AccessRegistry, AccessRole, Role};
 
-use blacklist_hook::constants::BLACKLIST_HOOK_CONFIG;
-use blacklist_hook::program::BlacklistHook;
-use blacklist_hook::state::BlacklistHookConfig;
+use blacklist_hook::utils::is_in_blacklist;
 
 use crate::constants::VAULT_CONFIG_SEED;
 use crate::error::VaultError;
@@ -69,25 +68,26 @@ pub struct RedistributeLocked<'info> {
     #[account(mut)]
     pub locked_susdu_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
     /// CHECK: will be checked in the instruction
-    #[account(mut)]
-    pub receiver_susdu_token_account: UncheckedAccount<'info>,
+    pub receiver: UncheckedAccount<'info>,
     #[account(
-        seeds = [BLACKLIST_HOOK_CONFIG.as_bytes()],
-        seeds::program = blacklist_hook::id(),
-        bump = blacklist_hook_config.bump,
+        mut,
+        associated_token::mint = susdu_token,
+        associated_token::authority = receiver,
+        associated_token::token_program = token_program,
     )]
-    pub blacklist_hook_config: Box<Account<'info, BlacklistHookConfig>>,
+    pub receiver_susdu_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
+    /// CHECK: will be checked in the instruction
+    pub from_blacklist_entry: UncheckedAccount<'info>,
+    /// CHECK: will be checked in the instruction
+    pub to_blacklist_entry: UncheckedAccount<'info>,
 
-    pub blacklist_hook_program: Program<'info, BlacklistHook>,
     pub susdu_program: Program<'info, Susdu>,
     pub token_program: Program<'info, Token2022>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
 }
 
-pub fn process_redistribute_locked(
-    ctx: Context<RedistributeLocked>,
-    receiver: Pubkey,
-) -> Result<()> {
+pub fn process_redistribute_locked(ctx: Context<RedistributeLocked>) -> Result<()> {
     // 1. check user must have manager role
     require!(
         has_role_or_admin(
@@ -105,13 +105,20 @@ pub fn process_redistribute_locked(
         VaultError::InvalidSusduToken
     );
 
-    // 2. check user must be in blacklist
+    // 2. check locked_susdu_token_account'owner must be in blacklist and receiver must not in blacklist
     require!(
-        ctx.accounts
-            .blacklist_hook_config
-            .blacklist
-            .contains(&ctx.accounts.locked_susdu_token_account.owner),
+        is_in_blacklist(
+            &ctx.accounts.from_blacklist_entry.to_account_info(),
+            &ctx.accounts.locked_susdu_token_account.owner
+        )?,
         VaultError::NotBlacklistAccount
+    );
+    require!(
+        !is_in_blacklist(
+            &ctx.accounts.to_blacklist_entry.to_account_info(),
+            &ctx.accounts.receiver.key()
+        )?,
+        VaultError::BlacklistAccount
     );
 
     // 3. check locked_susdu_token_account amount is greater than 0
@@ -122,7 +129,7 @@ pub fn process_redistribute_locked(
     );
 
     let config_bump = &[ctx.accounts.vault_config.bump];
-    let signer_seeds = &[&[VAULT_CONFIG_SEED, config_bump][..]];
+    let config_seeds = &[&[VAULT_CONFIG_SEED, config_bump][..]];
     redistribute_susdu(
         CpiContext::new_with_signer(
             ctx.accounts.susdu_program.to_account_info(),
@@ -143,15 +150,15 @@ pub fn process_redistribute_locked(
                 token_program: ctx.accounts.token_program.to_account_info(),
                 system_program: ctx.accounts.system_program.to_account_info(),
             },
-            signer_seeds,
+            config_seeds,
         ),
-        receiver,
+        ctx.accounts.receiver.key(),
         locked_susdu_token_account_amount,
     )?;
 
     emit!(LockedSusduRedistributed {
         from: ctx.accounts.locked_susdu_token_account.owner,
-        to: receiver,
+        to: ctx.accounts.receiver.key(),
         amount: locked_susdu_token_account_amount,
         is_burned: false,
     });

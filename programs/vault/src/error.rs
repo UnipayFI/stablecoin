@@ -75,6 +75,8 @@ pub enum VaultError {
     VaultSiloUsduTokenAccountAlreadyInitialized,
     #[msg("Invalid receiver usdu token account")]
     InvalidReceiverUsduTokenAccount,
+    #[msg("Invalid remaining accounts")]
+    InvalidRemainingAccounts,
 
     // Cooldown related errors
     #[msg("Invalid cooldown owner")]
@@ -143,6 +145,8 @@ pub enum VaultError {
     // Blacklist related errors
     #[msg("Not blacklist account")]
     NotBlacklistAccount,
+    #[msg("Blacklist account")]
+    BlacklistAccount,
 
     // Math calculation related errors
     #[msg("Math overflow")]

@@ -78,7 +78,10 @@ pub mod vault {
         process_stake_usdu_mint_susdu(ctx, usdu_amount)
     }
 
-    pub fn unstake_susdu(ctx: Context<UnstakeSusdu>, susdu_amount: u64) -> Result<()> {
+    pub fn unstake_susdu<'info>(
+        ctx: Context<'_, '_, '_, 'info, UnstakeSusdu<'info>>,
+        susdu_amount: u64,
+    ) -> Result<()> {
         process_unstake_susdu(ctx, susdu_amount)
     }
 
@@ -93,8 +96,8 @@ pub mod vault {
         process_distribute_usdu_reward(ctx, usdu_amount)
     }
 
-    pub fn emergency_withdraw_vault_susdu(
-        ctx: Context<EmergencyWithdrawVaultSusdu>,
+    pub fn emergency_withdraw_vault_susdu<'info>(
+        ctx: Context<'_, '_, '_, 'info, EmergencyWithdrawVaultSusdu<'info>>,
         amount: u64,
     ) -> Result<()> {
         process_emergency_withdraw_vault_susdu(ctx, amount)
@@ -121,8 +124,8 @@ pub mod vault {
         process_emergency_withdraw_vault_stake_pool_usdu(ctx, amount)
     }
 
-    pub fn redistribute_locked(ctx: Context<RedistributeLocked>, receiver: Pubkey) -> Result<()> {
-        process_redistribute_locked(ctx, receiver)
+    pub fn redistribute_locked(ctx: Context<RedistributeLocked>) -> Result<()> {
+        process_redistribute_locked(ctx)
     }
 
     pub fn propose_new_admin(ctx: Context<ProposeNewAdmin>) -> Result<()> {

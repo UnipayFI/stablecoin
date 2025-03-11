@@ -63,9 +63,6 @@ impl VaultConfig {
             .total_staked_usdu_supply
             .checked_sub(unvested_amount)
             .expect("Math overflow");
-        msg!("total asset about usdu: {}", self.total_staked_usdu_supply);
-        msg!("unvested amount: {}", unvested_amount);
-        msg!("result: {}", result);
         result
     }
 

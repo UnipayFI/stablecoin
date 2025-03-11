@@ -79,7 +79,7 @@ pub fn process_mint_susdu(ctx: Context<MintSusdu>, susdu_amount: u64) -> Result<
 
     require!(susdu_amount > 0, SusduError::AmountMustBeGreaterThanZero);
 
-    let signer_seeds: &[&[&[u8]]] = &[&[SUSDU_SEED, &[ctx.accounts.susdu_config.susdu_token_bump]]];
+    let signed_seeds: &[&[&[u8]]] = &[&[SUSDU_SEED, &[ctx.accounts.susdu_config.susdu_token_bump]]];
     let susdu_config = &mut ctx.accounts.susdu_config;
     susdu_config.total_supply = susdu_config
         .total_supply
@@ -93,7 +93,7 @@ pub fn process_mint_susdu(ctx: Context<MintSusdu>, susdu_amount: u64) -> Result<
                 to: ctx.accounts.receiver_token_account.to_account_info(),
                 authority: ctx.accounts.susdu_token.to_account_info(),
             },
-            signer_seeds,
+            signed_seeds,
         ),
         susdu_amount,
     )?;

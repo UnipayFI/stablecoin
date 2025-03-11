@@ -12,9 +12,9 @@ use anchor_spl::{
 
 use std::cell::RefMut;
 
-use crate::constants::{BLACKLIST_HOOK_CONFIG, EXTRA_ACCOUNT_META_LIST_SEED};
+use crate::constants::{BLACKLIST_ENTRY_SEED, EXTRA_ACCOUNT_META_LIST_SEED};
 use crate::error::BlacklistHookError;
-use crate::state::BlacklistHookConfig;
+use crate::utils::is_in_blacklist;
 
 #[derive(Accounts)]
 pub struct TransferHook<'info> {
@@ -34,8 +34,18 @@ pub struct TransferHook<'info> {
     )]
     /// CHECK: This is the extra account meta list
     pub extra_account_meta_list: AccountInfo<'info>,
-    #[account(seeds = [BLACKLIST_HOOK_CONFIG.as_bytes()], bump)]
-    pub blacklist_hook_config: Box<Account<'info, BlacklistHookConfig>>,
+    #[account(
+        seeds = [BLACKLIST_ENTRY_SEED.as_bytes(), source_token.owner.as_ref()],
+        bump,
+    )]
+    /// CHECK: This is the source blacklist entry, may not exist
+    pub source_blacklist_entry: UncheckedAccount<'info>,
+    #[account(
+        seeds = [BLACKLIST_ENTRY_SEED.as_bytes(), destination_token.owner.as_ref()],
+        bump,
+    )]
+    /// CHECK: This is the destination blacklist entry, may not exist
+    pub destination_blacklist_entry: UncheckedAccount<'info>,
 }
 
 pub fn process_transfer_hook(ctx: Context<TransferHook>, _amount: u64) -> Result<()> {
@@ -43,22 +53,24 @@ pub fn process_transfer_hook(ctx: Context<TransferHook>, _amount: u64) -> Result
     let mut account_data_ref: RefMut<&mut [u8]> = source_token_info.try_borrow_mut_data()?;
     let mut account = PodStateWithExtensionsMut::<PodAccount>::unpack(*account_data_ref)?;
     let account_with_extensions = account.get_extension_mut::<TransferHookAccount>()?;
-
+    msg!("process_transfer_hook");
     if !bool::from(account_with_extensions.transferring) {
-        return err!(BlacklistHookError::IsNotTransferring);
+        return Ok(());
     }
 
-    let blacklist = &ctx.accounts.blacklist_hook_config.blacklist;
-    if is_in_blacklist(blacklist, &ctx.accounts.owner.key()) {
-        panic!("Operation not allowed");
+    if is_in_blacklist(
+        &ctx.accounts.source_blacklist_entry.to_account_info(),
+        &ctx.accounts.source_token.owner,
+    )? {
+        return err!(BlacklistHookError::SourceAddressBlacklisted);
     }
-    if is_in_blacklist(blacklist, &ctx.accounts.destination_token.owner) {
-        panic!("Operation not allowed");
+
+    if is_in_blacklist(
+        &ctx.accounts.destination_blacklist_entry.to_account_info(),
+        &ctx.accounts.destination_token.owner,
+    )? {
+        return err!(BlacklistHookError::DestinationAddressBlacklisted);
     }
 
     Ok(())
-}
-
-fn is_in_blacklist(blacklist: &[Pubkey], key: &Pubkey) -> bool {
-    blacklist.contains(key)
 }

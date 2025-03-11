@@ -36,7 +36,6 @@ pub struct SusduTokenRedistributed {
     pub amount: u64,
     pub from: Pubkey,
     pub to: Pubkey,
-    pub is_burned: bool,
 }
 
 #[event]

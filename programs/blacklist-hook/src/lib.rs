@@ -3,7 +3,7 @@ pub mod error;
 pub mod events;
 pub mod instructions;
 pub mod state;
-
+pub mod utils;
 use anchor_lang::prelude::*;
 use spl_transfer_hook_interface::instruction::TransferHookInstruction;
 
@@ -12,6 +12,7 @@ pub use error::*;
 pub use events::*;
 pub use instructions::*;
 pub use state::*;
+pub use utils::*;
 
 declare_id!("3L8uCaQSScHynZYFjHhYhrUFFguDUq8wjVe7T2NwXoR3");
 
@@ -24,6 +25,7 @@ pub mod blacklist_hook {
     }
 
     pub fn transfer_hook(ctx: Context<TransferHook>, amount: u64) -> Result<()> {
+        msg!("transfer_hook");
         process_transfer_hook(ctx, amount)
     }
 
@@ -48,6 +50,7 @@ pub mod blacklist_hook {
         accounts: &'info [AccountInfo<'info>],
         instruction_data: &[u8],
     ) -> Result<()> {
+        msg!("fallback");
         let instruction = TransferHookInstruction::unpack(instruction_data)?;
         match instruction {
             TransferHookInstruction::Execute { amount } => {

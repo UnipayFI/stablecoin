@@ -17,11 +17,13 @@ pub struct AdminTransferCompleted {
 #[event]
 pub struct BlacklistAdded {
     pub user: Pubkey,
+    pub blacklist_entry: Pubkey,
     pub blacklist_hook_config: Pubkey,
 }
 
 #[event]
 pub struct BlacklistRemoved {
     pub user: Pubkey,
+    pub blacklist_entry: Pubkey,
     pub blacklist_hook_config: Pubkey,
 }

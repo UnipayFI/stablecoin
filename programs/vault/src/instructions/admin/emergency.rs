@@ -1,6 +1,8 @@
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
-use anchor_spl::token_2022::{transfer_checked, TransferChecked};
+use anchor_spl::token_2022::{
+    spl_token_2022::onchain::invoke_transfer_checked, transfer_checked, TransferChecked,
+};
 use anchor_spl::token_interface::{Mint, Token2022, TokenAccount};
 
 use crate::constants::{
@@ -296,10 +298,6 @@ pub(crate) fn process_emergency_withdraw_vault_slio_usdu(
         VaultError::InsufficientSiloUsdu
     );
 
-    // Note: We don't update total_staked_usdu_supply here because
-    // silo USDU tokens are not part of the staked supply.
-    // They are likely rewards or other non-staked USDU.
-
     let vault_state = &ctx.accounts.vault_state;
     let vault_silo_usdu_token_account_bump = &[vault_state.vault_silo_usdu_token_account_bump];
     let vault_silo_usdu_token_account_seed = &[&[
@@ -343,10 +341,6 @@ pub(crate) fn process_emergency_withdraw_vault_usdu(
         VaultError::InsufficientVaultUsdu
     );
 
-    // Note: We don't update total_staked_usdu_supply here because
-    // vault USDU tokens are not part of the staked supply.
-    // They are likely unstaked USDU or USDU in transit.
-
     let vault_state = &ctx.accounts.vault_state;
     let vault_usdu_token_account_bump = &[vault_state.vault_usdu_token_account_bump];
     let vault_usdu_token_account_seed =
@@ -368,8 +362,8 @@ pub(crate) fn process_emergency_withdraw_vault_usdu(
     Ok(())
 }
 
-pub(crate) fn process_emergency_withdraw_vault_susdu(
-    ctx: Context<EmergencyWithdrawVaultSusdu>,
+pub(crate) fn process_emergency_withdraw_vault_susdu<'info>(
+    ctx: Context<'_, '_, '_, 'info, EmergencyWithdrawVaultSusdu<'info>>,
     amount: u64,
 ) -> Result<()> {
     require!(
@@ -388,29 +382,22 @@ pub(crate) fn process_emergency_withdraw_vault_susdu(
         VaultError::InsufficientVaultSusdu
     );
 
-    // Note: For SUSDU withdrawals, we don't update total_staked_usdu_supply
-    // because SUSDU tokens represent shares, not the underlying USDU.
-    // The actual USDU tokens are still in the vault's stake pool.
-
     let vault_state = &ctx.accounts.vault_state;
     let vault_susdu_token_account_bump = &[vault_state.vault_susdu_token_account_bump];
     let vault_susdu_token_account_seed = &[&[
         VAULT_SUSDU_TOKEN_ACCOUNT_SEED,
         vault_susdu_token_account_bump,
     ][..]];
-    transfer_checked(
-        CpiContext::new_with_signer(
-            ctx.accounts.token_program.to_account_info(),
-            TransferChecked {
-                from: ctx.accounts.vault_susdu_token_account.to_account_info(),
-                to: ctx.accounts.receiver_susdu_token_account.to_account_info(),
-                authority: ctx.accounts.vault_susdu_token_account.to_account_info(),
-                mint: ctx.accounts.susdu_token.to_account_info(),
-            },
-            vault_susdu_token_account_seed,
-        ),
+    invoke_transfer_checked(
+        ctx.accounts.token_program.key,
+        ctx.accounts.vault_susdu_token_account.to_account_info(),
+        ctx.accounts.susdu_token.to_account_info(),
+        ctx.accounts.receiver_susdu_token_account.to_account_info(),
+        ctx.accounts.vault_susdu_token_account.to_account_info(),
+        ctx.remaining_accounts,
         amount,
         ctx.accounts.susdu_token.decimals,
+        vault_susdu_token_account_seed,
     )?;
     Ok(())
 }

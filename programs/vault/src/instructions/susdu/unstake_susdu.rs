@@ -1,6 +1,8 @@
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
-use anchor_spl::token_2022::{transfer_checked, TransferChecked};
+use anchor_spl::token_2022::{
+    spl_token_2022::onchain::invoke_transfer_checked, transfer_checked, TransferChecked,
+};
 use anchor_spl::token_interface::{Mint, Token2022, TokenAccount};
 
 use guardian::constants::{ACCESS_REGISTRY_SEED, ACCESS_ROLE_SEED};
@@ -83,7 +85,12 @@ pub struct UnstakeSusdu<'info> {
     )]
     pub access_registry: Box<Account<'info, AccessRegistry>>,
     #[account(
-        seeds = [ACCESS_ROLE_SEED, access_registry.key().as_ref(), vault_config.key().as_ref(), Role::SusduRedeemer.to_seed().as_slice()],
+        seeds = [
+            ACCESS_ROLE_SEED,
+            access_registry.key().as_ref(),
+            vault_config.key().as_ref(),
+            Role::SusduRedeemer.to_seed().as_slice(),
+        ],
         bump = susdu_redeemer.bump,
         seeds::program = guardian::id(),
     )]
@@ -118,7 +125,10 @@ pub struct UnstakeSusdu<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub(crate) fn process_unstake_susdu(ctx: Context<UnstakeSusdu>, susdu_amount: u64) -> Result<()> {
+pub(crate) fn process_unstake_susdu<'info>(
+    ctx: Context<'_, '_, '_, 'info, UnstakeSusdu<'info>>,
+    susdu_amount: u64,
+) -> Result<()> {
     // 1. check caller has the role
     require!(
         has_role(
@@ -215,18 +225,16 @@ pub(crate) fn process_unstake_susdu(ctx: Context<UnstakeSusdu>, susdu_amount: u6
         cooldown.underlying_token_amount += usdu_amount;
     };
     // 11. transfer susdu from caller to vault susdu token account
-    transfer_checked(
-        CpiContext::new(
-            ctx.accounts.token_program.to_account_info(),
-            TransferChecked {
-                from: ctx.accounts.caller_susdu_token_account.to_account_info(),
-                to: ctx.accounts.vault_susdu_token_account.to_account_info(),
-                mint: ctx.accounts.susdu_token.to_account_info(),
-                authority: ctx.accounts.caller.to_account_info(),
-            },
-        ),
+    invoke_transfer_checked(
+        ctx.accounts.token_program.key,
+        ctx.accounts.caller_susdu_token_account.to_account_info(),
+        ctx.accounts.susdu_token.to_account_info(),
+        ctx.accounts.vault_susdu_token_account.to_account_info(),
+        ctx.accounts.caller.to_account_info(),
+        ctx.remaining_accounts,
         susdu_amount,
         ctx.accounts.susdu_token.decimals,
+        &[],
     )?;
 
     // 12. redeem susdu from vault susdu token account
