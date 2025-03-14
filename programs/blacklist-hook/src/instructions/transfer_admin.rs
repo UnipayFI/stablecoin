@@ -43,6 +43,16 @@ pub struct AcceptAdminTransfer<'info> {
 pub fn process_propose_new_admin(ctx: Context<ProposeNewAdmin>) -> Result<()> {
     let blacklist_hook_config = &mut ctx.accounts.blacklist_hook_config;
 
+    require!(
+        blacklist_hook_config.pending_admin != ctx.accounts.proposed_admin.key(),
+        BlacklistHookError::ProposedAdminAlreadySet
+    );
+
+    require!(
+        blacklist_hook_config.admin != ctx.accounts.proposed_admin.key(),
+        BlacklistHookError::ProposedAdminIsCurrentAdmin
+    );
+
     blacklist_hook_config.pending_admin = ctx.accounts.proposed_admin.key();
 
     emit!(AdminTransferProposed {

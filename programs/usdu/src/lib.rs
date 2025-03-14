@@ -13,7 +13,7 @@ pub use events::*;
 pub use instructions::*;
 pub use state::*;
 
-declare_id!("2EfRohHd6CMfGPYTq16g4UYCD6f6vPzUpq1urgbwD4QB");
+declare_id!("3o9ikkTMCkD8Yez7n2orrw9mhDnahcTQBqfeYmyKApdH");
 
 #[program]
 pub mod usdu {

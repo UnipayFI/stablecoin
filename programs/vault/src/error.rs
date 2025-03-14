@@ -18,6 +18,12 @@ pub enum VaultError {
     #[msg("Insufficient initial deposit")]
     InsufficientInitialDeposit,
 
+    // Admin transfer related errors
+    #[msg("Proposed admin already set")]
+    ProposedAdminAlreadySet,
+    #[msg("Proposed admin is current admin")]
+    ProposedAdminIsCurrentAdmin,
+
     // Permission related errors
     #[msg("Unauthorized")]
     Unauthorized,

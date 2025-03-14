@@ -6,6 +6,12 @@ pub enum GuardianError {
     #[msg("Unauthorized: must be guardian admin")]
     UnauthorizedGuardianAdmin,
 
+    // Admin transfer related errors
+    #[msg("Proposed admin already set")]
+    ProposedAdminAlreadySet,
+    #[msg("Proposed admin is current admin")]
+    ProposedAdminIsCurrentAdmin,
+
     // USDU related role errors
     #[msg("Unauthorized: must be usdu minter")]
     UnauthorizedUsduMinter,

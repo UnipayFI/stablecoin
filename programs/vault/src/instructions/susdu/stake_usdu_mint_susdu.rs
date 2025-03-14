@@ -67,7 +67,6 @@ pub struct StakeUsduMintSusdu<'info> {
     #[account(
         seeds = [VAULT_STATE_SEED],
         bump = vault_state.bump,
-        has_one = vault_stake_pool_usdu_token_account,
     )]
     pub vault_state: Box<Account<'info, VaultState>>,
     #[account(
@@ -192,7 +191,8 @@ pub fn process_stake_usdu_mint_susdu(
     let susdu_config_data = susdu_config.try_borrow_data()?;
     let updated_total_supply = SusduConfig::try_deserialize(&mut &susdu_config_data[..])?;
 
-    // 11. check min shares with updated total_supply
+    // 11. check min shares with updated total_supply, reload susdu_config first
+    ctx.accounts.susdu_config.reload()?;
     vault_config.check_min_shares(updated_total_supply.total_supply)?;
     Ok(())
 }

@@ -50,6 +50,16 @@ pub struct AcceptAdminTransfer<'info> {
 pub fn process_propose_new_admin(ctx: Context<ProposeNewAdmin>) -> Result<()> {
     let vault_config = &mut ctx.accounts.vault_config;
 
+    require!(
+        vault_config.pending_admin != ctx.accounts.proposed_admin.key(),
+        VaultError::ProposedAdminAlreadySet
+    );
+
+    require!(
+        vault_config.admin != ctx.accounts.proposed_admin.key(),
+        VaultError::ProposedAdminIsCurrentAdmin
+    );
+
     vault_config.pending_admin = ctx.accounts.proposed_admin.key();
 
     emit!(AdminTransferProposed {

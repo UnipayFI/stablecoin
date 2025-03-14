@@ -5,6 +5,8 @@ use crate::state::Role;
 #[event]
 pub struct AccessRegistryInitialized {
     pub access_registry: Pubkey,
+    pub admin: Pubkey,
+    pub is_initialized: bool,
 }
 
 #[event]

@@ -12,6 +12,12 @@ pub enum SusduError {
     #[msg("Config not setup susdu")]
     ConfigNotSetupSusdu,
 
+    // Admin transfer related errors
+    #[msg("Proposed admin already set")]
+    ProposedAdminAlreadySet,
+    #[msg("Proposed admin is current admin")]
+    ProposedAdminIsCurrentAdmin,
+
     // Permission related errors
     #[msg("Unauthorized role")]
     UnauthorizedRole,

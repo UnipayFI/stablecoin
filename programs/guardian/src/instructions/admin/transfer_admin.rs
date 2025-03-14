@@ -43,6 +43,16 @@ pub struct AcceptAdminTransfer<'info> {
 pub fn process_propose_new_admin(ctx: Context<ProposeNewAdmin>) -> Result<()> {
     let access_registry = &mut ctx.accounts.access_registry;
 
+    require!(
+        access_registry.pending_admin != ctx.accounts.proposed_admin.key(),
+        GuardianError::ProposedAdminAlreadySet
+    );
+
+    require!(
+        access_registry.admin != ctx.accounts.proposed_admin.key(),
+        GuardianError::ProposedAdminIsCurrentAdmin
+    );
+
     access_registry.pending_admin = ctx.accounts.proposed_admin.key();
 
     emit!(AdminTransferProposed {

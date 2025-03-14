@@ -12,6 +12,12 @@ pub enum UsduError {
     #[msg("Config not setup usdu")]
     ConfigNotSetupUsdu,
 
+    // Admin transfer related errors
+    #[msg("Proposed admin already set")]
+    ProposedAdminAlreadySet,
+    #[msg("Proposed admin is current admin")]
+    ProposedAdminIsCurrentAdmin,
+
     // Permission related errors
     #[msg("Unauthorized role")]
     UnauthorizedRole,

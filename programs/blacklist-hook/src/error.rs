@@ -8,6 +8,12 @@ pub enum BlacklistHookError {
     #[msg("Config not initialized")]
     ConfigNotInitialized,
 
+    // Admin transfer related errors
+    #[msg("Proposed admin already set")]
+    ProposedAdminAlreadySet,
+    #[msg("Proposed admin is current admin")]
+    ProposedAdminIsCurrentAdmin,
+
     // Mint related errors
     #[msg("Invalid mint")]
     InvalidMint,

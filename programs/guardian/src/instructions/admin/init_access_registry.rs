@@ -30,8 +30,11 @@ pub(crate) fn process_init_access_registry(ctx: Context<InitAccessRegistry>) -> 
     ctx.accounts.access_registry.pending_admin = Pubkey::default();
     ctx.accounts.access_registry.bump = ctx.bumps.access_registry;
     ctx.accounts.access_registry.is_initialized = true;
+
     emit!(AccessRegistryInitialized {
+        admin: ctx.accounts.admin.key(),
         access_registry: ctx.accounts.access_registry.key(),
+        is_initialized: ctx.accounts.access_registry.is_initialized,
     });
     Ok(())
 }

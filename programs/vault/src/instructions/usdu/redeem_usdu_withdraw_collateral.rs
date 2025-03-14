@@ -24,7 +24,6 @@ pub struct RedeemUsduWithdrawCollateral<'info> {
     #[account(
         seeds = [VAULT_STATE_SEED],
         bump = vault_state.bump,
-        has_one = vault_usdu_token_account,
     )]
     pub vault_state: Box<Account<'info, VaultState>>,
     #[account(

@@ -49,48 +49,8 @@ pub fn has_role<'info>(
         ],
         &crate::ID,
     );
-    if access_role.key() == role_address
-        || (authority.key() == matched_role.owner && matched_role.role == role)
-    {
+    if access_role.key() == role_address {
         return Ok(true);
-    }
-
-    Ok(false)
-}
-
-pub fn has_privileged_role(
-    access_registry: &Account<AccessRegistry>,
-    user: &Pubkey,
-) -> Result<bool> {
-    if user == &access_registry.admin {
-        return Ok(true);
-    }
-
-    let privileged_roles = [
-        Role::GuardianAdmin,
-        Role::VaultAdmin,
-        Role::UsduMinter,
-        Role::UsduRedeemer,
-        Role::SusduMinter,
-        Role::SusduRedeemer,
-        Role::SusduDistributor,
-        Role::RewardDistributor,
-    ];
-
-    for role in privileged_roles.iter() {
-        let (role_address, _) = Pubkey::find_program_address(
-            &[
-                ACCESS_ROLE_SEED,
-                access_registry.key().as_ref(),
-                user.as_ref(),
-                role.to_seed().as_slice(),
-            ],
-            &crate::ID,
-        );
-
-        if role_address != Pubkey::default() {
-            return Ok(true);
-        }
     }
 
     Ok(false)

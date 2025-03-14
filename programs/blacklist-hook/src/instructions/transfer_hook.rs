@@ -53,9 +53,9 @@ pub fn process_transfer_hook(ctx: Context<TransferHook>, _amount: u64) -> Result
     let mut account_data_ref: RefMut<&mut [u8]> = source_token_info.try_borrow_mut_data()?;
     let mut account = PodStateWithExtensionsMut::<PodAccount>::unpack(*account_data_ref)?;
     let account_with_extensions = account.get_extension_mut::<TransferHookAccount>()?;
-    msg!("process_transfer_hook");
+
     if !bool::from(account_with_extensions.transferring) {
-        return Ok(());
+        return err!(BlacklistHookError::IsNotTransferring);
     }
 
     if is_in_blacklist(

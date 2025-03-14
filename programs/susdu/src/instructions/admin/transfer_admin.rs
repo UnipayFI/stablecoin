@@ -43,6 +43,16 @@ pub struct AcceptAdminTransfer<'info> {
 pub fn process_propose_new_admin(ctx: Context<ProposeNewAdmin>) -> Result<()> {
     let susdu_config = &mut ctx.accounts.susdu_config;
 
+    require!(
+        susdu_config.pending_admin != ctx.accounts.proposed_admin.key(),
+        SusduError::ProposedAdminAlreadySet
+    );
+
+    require!(
+        susdu_config.admin != ctx.accounts.proposed_admin.key(),
+        SusduError::ProposedAdminIsCurrentAdmin
+    );
+
     susdu_config.pending_admin = ctx.accounts.proposed_admin.key();
 
     emit!(AdminTransferProposed {
