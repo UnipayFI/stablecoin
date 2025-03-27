@@ -464,6 +464,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "blacklist-hook"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "spl-tlv-account-resolution",
+ "spl-transfer-hook-interface",
+]
+
+[[package]]
 name = "blake3"
 version = "1.5.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1018,7 +1028,6 @@ name = "guardian"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "solana-program",
 ]
 
 [[package]]
@@ -2479,11 +2488,11 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
+ "blacklist-hook",
  "bytemuck",
  "guardian",
  "num-derive",
  "num-traits",
- "solana-program",
  "susdu",
  "thiserror",
  "uint",

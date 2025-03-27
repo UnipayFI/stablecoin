@@ -82,7 +82,7 @@ impl VaultConfig {
             return Ok(());
         }
         require!(
-            total_shares >= MIN_SHARES,
+            total_shares == 0 || total_shares >= MIN_SHARES,
             VaultError::InsufficientMinShares
         );
         Ok(())
