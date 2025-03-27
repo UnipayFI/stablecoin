@@ -178,16 +178,6 @@ impl VaultConfig {
         self.convert_to_shares(assets, total_shares, Rounding::Floor)
     }
 
-    /// ERC4626 preview withdraw
-    // pub(crate) fn preview_withdraw(&self, assets: u128, total_shares: u128) -> u128 {
-    //     self.convert_to_shares(assets, total_shares, true)
-    // }
-
-    /// ERC4626 preview mint
-    // pub(crate) fn preview_mint(&self, shares: u128, total_shares: u128) -> u128 {
-    //     self.convert_to_assets(shares, total_shares, false)
-    // }
-
     /// ERC4626 preview redeem
     /// Uses Rounding::Floor to ensure consistent behavior with preview_deposit
     pub(crate) fn preview_redeem(&self, shares: u64, total_shares: u64) -> u64 {
