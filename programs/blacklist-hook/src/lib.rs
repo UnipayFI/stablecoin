@@ -14,7 +14,7 @@ pub use instructions::*;
 pub use state::*;
 pub use utils::*;
 
-declare_id!("1v3dhKP5m9qm57aFL5HLYLUoeMJqneS15dJurV79THy");
+declare_id!("D1LX6ahmDrmkN57VoanTav2Gvr6drtxq8n5yL5Wmg7bR");
 
 #[program]
 pub mod blacklist_hook {

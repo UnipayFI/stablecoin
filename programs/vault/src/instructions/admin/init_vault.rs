@@ -215,6 +215,7 @@ pub fn process_init_vault_config(
     vault_config.vesting_amount = 0;
     vault_config.last_distribution_timestamp = 0;
     vault_config.total_staked_usdu_supply = 0;
+    vault_config.total_cooldown_usdu_amount = 0;
 
     // Emit event
     emit!(VaultConfigInitialized {

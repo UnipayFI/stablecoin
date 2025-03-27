@@ -189,6 +189,10 @@ pub(crate) fn process_unstake_susdu<'info>(
 
     vault_config.total_staked_usdu_supply = vault_config.total_staked_usdu_supply - usdu_amount;
 
+    vault_config.total_cooldown_usdu_amount = vault_config.total_cooldown_usdu_amount
+        .checked_add(usdu_amount)
+        .ok_or(VaultError::MathOverflow)?;
+
     // 9. check cooldown is initialized
     if !ctx.accounts.cooldown.is_initialized {
         let cooldown = Cooldown {

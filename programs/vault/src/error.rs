@@ -123,6 +123,8 @@ pub enum VaultError {
     InsufficientSiloUsdu,
     #[msg("Insufficient usdu in silo for cooldown withdrawals")]
     InsufficientUsduInSilo,
+    #[msg("Insufficient usdu to cover all active cooldowns")]
+    InsufficientUsduForCooldowns,
     #[msg("Still vesting")]
     StillVesting,
 

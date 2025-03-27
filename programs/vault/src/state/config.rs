@@ -26,6 +26,7 @@ pub struct VaultConfig {
 
     pub cooldown_duration: u64,
     pub total_staked_usdu_supply: u64,
+    pub total_cooldown_usdu_amount: u64,
     pub vesting_amount: u64,
     pub last_distribution_timestamp: u64,
     pub has_initial_deposit: bool,

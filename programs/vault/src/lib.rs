@@ -16,7 +16,7 @@ pub use math::*;
 pub use state::*;
 pub use utils::*;
 
-declare_id!("GHQwoTgsKdsKMjn3ysdtWBNRbvzoiTGzBAuJn4idZB4");
+declare_id!("5GvhWwXLn2kMPJynLEr6w4umZDSMkW75HmRjDmVQrFwR");
 
 #[program]
 pub mod vault {
@@ -134,5 +134,12 @@ pub mod vault {
 
     pub fn accept_admin_transfer(ctx: Context<AcceptAdminTransfer>) -> Result<()> {
         process_accept_admin_transfer(ctx)
+    }
+
+    pub fn reset_total_cooldown_usdu_amount(
+        ctx: Context<EmergencyResetCooldownAmount>,
+        new_amount: u64,
+    ) -> Result<()> {
+        process_reset_total_cooldown_usdu_amount(ctx, new_amount)
     }
 }

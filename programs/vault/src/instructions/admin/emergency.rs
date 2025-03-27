@@ -401,3 +401,54 @@ pub(crate) fn process_emergency_withdraw_vault_susdu<'info>(
     )?;
     Ok(())
 }
+
+pub(crate) fn process_reset_total_cooldown_usdu_amount(
+    ctx: Context<EmergencyResetCooldownAmount>,
+    new_amount: u64,
+) -> Result<()> {
+    require!(
+        has_role_or_admin(
+            &ctx.accounts.vault_config,
+            &ctx.accounts.access_registry,
+            &ctx.accounts.vault_admin.to_account_info(),
+            &ctx.accounts.authority.to_account_info(),
+            Role::VaultAdmin
+        )?,
+        VaultError::UnauthorizedRole
+    );
+    
+    let vault_config = &mut ctx.accounts.vault_config;
+    vault_config.total_cooldown_usdu_amount = new_amount;
+    
+    Ok(())
+}
+
+#[derive(Accounts)]
+pub struct EmergencyResetCooldownAmount<'info> {
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    #[account(
+        mut,
+        seeds = [VAULT_CONFIG_SEED],
+        bump = vault_config.bump,
+    )]
+    pub vault_config: Box<Account<'info, VaultConfig>>,
+    #[account(
+        seeds = [ACCESS_REGISTRY_SEED],
+        seeds::program = guardian::id(),
+        bump = access_registry.bump,
+    )]
+    pub access_registry: Box<Account<'info, AccessRegistry>>,
+    #[account(
+        seeds = [
+            ACCESS_ROLE_SEED,
+            access_registry.key().as_ref(),
+            authority.key().as_ref(),
+            Role::VaultAdmin.to_seed().as_slice(),
+        ],
+        bump = vault_admin.bump,
+        seeds::program = guardian::id(),
+    )]
+    pub vault_admin: Box<Account<'info, AccessRole>>,
+    pub system_program: Program<'info, System>,
+}

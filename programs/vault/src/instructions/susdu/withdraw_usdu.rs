@@ -93,6 +93,11 @@ pub fn process_withdraw_usdu(ctx: Context<WithdrawUsdu>) -> Result<()> {
         VaultError::InsufficientUsduInSilo
     );
 
+    vault_config.total_cooldown_usdu_amount = vault_config
+        .total_cooldown_usdu_amount
+        .checked_sub(usdu_amount)
+        .ok_or(VaultError::MathOverflow)?;
+
     // 6. set cooldown account underlying_token_amount to 0 to prevent reentrancy
     let cooldown = &mut ctx.accounts.cooldown;
     cooldown.cooldown_end = 0;
