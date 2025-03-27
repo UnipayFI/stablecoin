@@ -14,7 +14,7 @@ use blacklist_hook::utils::is_in_blacklist;
 
 use crate::constants::VAULT_CONFIG_SEED;
 use crate::error::VaultError;
-use crate::events::LockedSusduRedistributed;
+use crate::events::RedistributedSusdu;
 use crate::state::VaultConfig;
 use crate::utils::has_role_or_admin;
 
@@ -156,11 +156,14 @@ pub fn process_redistribute_locked(ctx: Context<RedistributeLocked>) -> Result<(
         locked_susdu_token_account_amount,
     )?;
 
-    emit!(LockedSusduRedistributed {
-        from: ctx.accounts.locked_susdu_token_account.owner,
-        to: ctx.accounts.receiver.key(),
+    // Emit new detailed event
+    emit!(RedistributedSusdu {
+        vault_config: ctx.accounts.vault_config.key(),
+        authority: ctx.accounts.authority.key(),
         amount: locked_susdu_token_account_amount,
-        is_burned: false,
+        receiver: ctx.accounts.receiver.key(),
+        timestamp: Clock::get()?.unix_timestamp as u64,
     });
+    
     Ok(())
 }

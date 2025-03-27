@@ -76,3 +76,31 @@ pub struct LockedSusduRedistributed {
     pub amount: u64,
     pub is_burned: bool,
 }
+
+#[event]
+pub struct UsduWithdrawn {
+    pub vault_config: Pubkey,
+    pub caller: Pubkey,
+    pub receiver: Pubkey,
+    pub usdu_amount: u64,
+    pub timestamp: u64,
+}
+
+#[event]
+pub struct RedistributedSusdu {
+    pub vault_config: Pubkey,
+    pub authority: Pubkey,
+    pub amount: u64,
+    pub receiver: Pubkey,
+    pub timestamp: u64,
+}
+
+#[event]
+pub struct EmergencyWithdrawal {
+    pub vault_config: Pubkey,
+    pub admin: Pubkey,
+    pub token_mint: Pubkey,
+    pub amount: u64,
+    pub destination: Pubkey,
+    pub timestamp: u64,
+}

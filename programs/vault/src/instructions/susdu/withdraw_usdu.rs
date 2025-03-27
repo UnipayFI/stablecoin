@@ -7,6 +7,7 @@ use crate::constants::{
     VAULT_CONFIG_SEED, VAULT_COOLDOWN_SEED, VAULT_SILO_USDU_TOKEN_ACCOUNT_SEED, VAULT_STATE_SEED,
 };
 use crate::error::VaultError;
+use crate::events::UsduWithdrawn;
 use crate::state::{Cooldown, VaultConfig, VaultState};
 
 #[derive(Accounts)]
@@ -112,7 +113,7 @@ pub fn process_withdraw_usdu(ctx: Context<WithdrawUsdu>) -> Result<()> {
             TransferChecked {
                 from: ctx.accounts.vault_silo_usdu_token_account.to_account_info(),
                 to: ctx.accounts.receiver_usdu_token_account.to_account_info(),
-                authority: ctx.accounts.vault_config.to_account_info(),
+                authority: vault_config.to_account_info(),
                 mint: ctx.accounts.usdu_token.to_account_info(),
             },
             config_seeds,
@@ -120,5 +121,15 @@ pub fn process_withdraw_usdu(ctx: Context<WithdrawUsdu>) -> Result<()> {
         usdu_amount,
         ctx.accounts.usdu_token.decimals,
     )?;
+
+    // Emit event
+    emit!(UsduWithdrawn {
+        vault_config: vault_config.key(),
+        caller: ctx.accounts.caller.key(),
+        receiver: ctx.accounts.receiver.key(),
+        usdu_amount,
+        timestamp: Clock::get()?.unix_timestamp as u64,
+    });
+    
     Ok(())
 }

@@ -11,6 +11,7 @@ use crate::constants::{
     VAULT_USDU_TOKEN_ACCOUNT_SEED,
 };
 use crate::error::VaultError;
+use crate::events::EmergencyWithdrawal;
 use crate::state::{VaultConfig, VaultState};
 use crate::utils::has_role_or_admin;
 
@@ -275,6 +276,17 @@ pub(crate) fn process_emergency_withdraw_vault_stake_pool_usdu(
         amount,
         ctx.accounts.usdu_token.decimals,
     )?;
+
+    // Emit event
+    emit!(EmergencyWithdrawal {
+        vault_config: vault_config.key(),
+        admin: ctx.accounts.authority.key(),
+        token_mint: ctx.accounts.usdu_token.key(),
+        amount,
+        destination: ctx.accounts.receiver.key(),
+        timestamp: Clock::get()?.unix_timestamp as u64,
+    });
+
     Ok(())
 }
 
@@ -318,6 +330,17 @@ pub(crate) fn process_emergency_withdraw_vault_slio_usdu(
         amount,
         ctx.accounts.usdu_token.decimals,
     )?;
+
+    // Emit event
+    emit!(EmergencyWithdrawal {
+        vault_config: ctx.accounts.vault_config.key(),
+        admin: ctx.accounts.authority.key(),
+        token_mint: ctx.accounts.usdu_token.key(),
+        amount,
+        destination: ctx.accounts.receiver.key(),
+        timestamp: Clock::get()?.unix_timestamp as u64,
+    });
+
     Ok(())
 }
 
@@ -359,6 +382,17 @@ pub(crate) fn process_emergency_withdraw_vault_usdu(
         amount,
         ctx.accounts.usdu_token.decimals,
     )?;
+
+    // Emit event
+    emit!(EmergencyWithdrawal {
+        vault_config: ctx.accounts.vault_config.key(),
+        admin: ctx.accounts.authority.key(),
+        token_mint: ctx.accounts.usdu_token.key(),
+        amount,
+        destination: ctx.accounts.receiver.key(),
+        timestamp: Clock::get()?.unix_timestamp as u64,
+    });
+
     Ok(())
 }
 
@@ -399,6 +433,17 @@ pub(crate) fn process_emergency_withdraw_vault_susdu<'info>(
         ctx.accounts.susdu_token.decimals,
         vault_susdu_token_account_seed,
     )?;
+
+    // Emit event
+    emit!(EmergencyWithdrawal {
+        vault_config: ctx.accounts.vault_config.key(),
+        admin: ctx.accounts.authority.key(),
+        token_mint: ctx.accounts.susdu_token.key(),
+        amount,
+        destination: ctx.accounts.receiver.key(),
+        timestamp: Clock::get()?.unix_timestamp as u64,
+    });
+
     Ok(())
 }
 
